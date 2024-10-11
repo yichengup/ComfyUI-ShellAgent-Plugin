@@ -7,66 +7,66 @@ import uuid
 import tqdm
 
 
-class ShellAgentPluginInputImage:
-    @classmethod
-    def INPUT_TYPES(s):
-        input_dir = folder_paths.get_input_directory()
-        files = [f for f in os.listdir(input_dir) if os.path.isfile(os.path.join(input_dir, f))]
-        files = sorted(files)
-        return {
-            "required": {
-                "input_name": (
-                    "STRING",
-                    {"multiline": False, "default": "input_image"},
-                ),
-                "default_value": (
-                    "STRING", {"image_upload": True, "default": files[0] if len(files) else ""},
-                ),
-            },
-            "optional": {
-                "description": (
-                    "STRING",
-                    {"multiline": True, "default": ""},
-                ),
-            }
-        }
+# class ShellAgentPluginInputImage:
+#     @classmethod
+#     def INPUT_TYPES(s):
+#         input_dir = folder_paths.get_input_directory()
+#         files = [f for f in os.listdir(input_dir) if os.path.isfile(os.path.join(input_dir, f))]
+#         files = sorted(files)
+#         return {
+#             "required": {
+#                 "input_name": (
+#                     "STRING",
+#                     {"multiline": False, "default": "input_image"},
+#                 ),
+#                 "default_value": (
+#                     "STRING", {"image_upload": True, "default": files[0] if len(files) else ""},
+#                 ),
+#             },
+#             "optional": {
+#                 "description": (
+#                     "STRING",
+#                     {"multiline": True, "default": ""},
+#                 ),
+#             }
+#         }
 
-    RETURN_TYPES = ("IMAGE",)
-    RETURN_NAMES = ("image",)
+#     RETURN_TYPES = ("IMAGE",)
+#     RETURN_NAMES = ("image",)
 
-    FUNCTION = "run"
+#     FUNCTION = "run"
 
-    CATEGORY = "shellagent"
+#     CATEGORY = "shellagent"
 
-    def run(self, input_name, default_value=None, display_name=None, description=None):
-        input_dir = folder_paths.get_input_directory()
-        image_path = default_value
-        try:
-            if image_path.startswith('http'):
-                import requests
-                from io import BytesIO
-                print("Fetching image from url: ", image)
-                response = requests.get(image)
-                image = Image.open(BytesIO(response.content))
-            elif image_path.startswith('data:image/png;base64,') or image_path.startswith('data:image/jpeg;base64,') or image_path.startswith('data:image/jpg;base64,'):
-                import base64
-                from io import BytesIO
-                print("Decoding base64 image")
-                base64_image = image_path[image_path.find(",")+1:]
-                decoded_image = base64.b64decode(base64_image)
-                image = Image.open(BytesIO(decoded_image))
-            else:
-                # local path
-                image_path = os.path.join(input_dir, image_path)
-                image = Image.open(image_path).convert("RGB")
+#     def run(self, input_name, default_value=None, display_name=None, description=None):
+#         input_dir = folder_paths.get_input_directory()
+#         image_path = default_value
+#         try:
+#             if image_path.startswith('http'):
+#                 import requests
+#                 from io import BytesIO
+#                 print("Fetching image from url: ", image)
+#                 response = requests.get(image)
+#                 image = Image.open(BytesIO(response.content))
+#             elif image_path.startswith('data:image/png;base64,') or image_path.startswith('data:image/jpeg;base64,') or image_path.startswith('data:image/jpg;base64,'):
+#                 import base64
+#                 from io import BytesIO
+#                 print("Decoding base64 image")
+#                 base64_image = image_path[image_path.find(",")+1:]
+#                 decoded_image = base64.b64decode(base64_image)
+#                 image = Image.open(BytesIO(decoded_image))
+#             else:
+#                 # local path
+#                 image_path = os.path.join(input_dir, image_path)
+#                 image = Image.open(image_path).convert("RGB")
 
-            image = ImageOps.exif_transpose(image)
-            image = image.convert("RGB")
-            image = np.array(image).astype(np.float32) / 255.0
-            image = torch.from_numpy(image)[None,]
-            return [image]
-        except Exception as e:
-            raise e
+#             image = ImageOps.exif_transpose(image)
+#             image = image.convert("RGB")
+#             image = np.array(image).astype(np.float32) / 255.0
+#             image = torch.from_numpy(image)[None,]
+#             return [image]
+#         except Exception as e:
+#             raise e
 
 video_extensions = ["webm", "mp4", "mkv", "gif"]
 
@@ -105,6 +105,17 @@ class ShellAgentPluginInputVideo:
     FUNCTION = "run"
 
     CATEGORY = "shellagent"
+    
+    @classmethod
+    def validate(cls, **kwargs):
+        schema = {
+            "title": kwargs["input_name"],
+            "type": "string",
+            "default": kwargs["default_value"],
+            "description": kwargs["description"],
+            "url_type": "video"
+        }
+        return schema
 
     def run(self, input_name, default_value=None, description=None):
         input_dir = folder_paths.get_input_directory()
@@ -136,7 +147,10 @@ class ShellAgentPluginInputVideo:
                 ):
                     out_file.write(chunk)
         else:
-            video_path = os.path.abspath(os.path.join(input_dir, default_value))
+            if os.path.isfile(default_value):
+                video_path = default_value
+            else:
+                video_path = os.path.abspath(os.path.join(input_dir, default_value))
 
         return (video_path,)
 

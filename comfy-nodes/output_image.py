@@ -1,7 +1,8 @@
 import folder_paths
 from nodes import SaveImage
+import os
 
-class ShellAgentSaveImage(SaveImage):
+class ShellAgentSaveImages(SaveImage):
     @classmethod
     def INPUT_TYPES(s):
         return {
@@ -15,15 +16,84 @@ class ShellAgentSaveImage(SaveImage):
             },
         }
         
+    CATEGORY = "shellagent"
+    
+    @classmethod
+    def validate(cls, **kwargs):
+        schema = {
+            "title": kwargs["output_name"],
+            "type": "array",
+            "items": {
+                "type": "string",
+                "url_type": "image",
+            }
+        }
+        return schema
+    
     def save_images(self, images, filename_prefix="ComfyUI", prompt=None, extra_pnginfo=None, **extra_kwargs):
         results = super().save_images(images, filename_prefix, prompt, extra_pnginfo)
         results["shellagent_kwargs"] = extra_kwargs
         return results
     
     
+class ShellAgentSaveImage(ShellAgentSaveImages):
+    @classmethod
+    def validate(cls, **kwargs):
+        schema = {
+            "title": kwargs["output_name"],
+            "type": "string",
+            "url_type": "image",
+        }
+        return schema
+    
+    
+class ShellAgentSaveVideoVHS:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": {
+                "filenames": ("VHS_FILENAMES", {"tooltip": "The filenames to save."}),
+                "output_name": ("STRING", {"multiline": False, "default": "output_video"},),
+            },
+        }
+        
+    RETURN_TYPES = ()
+    FUNCTION = "save_video"
+
+    OUTPUT_NODE = True
+
+    CATEGORY = "shellagent"
+    DESCRIPTION = "Saves the input images to your ComfyUI output directory."
+    
+    @classmethod
+    def validate(cls, **kwargs):
+        schema = {
+            "title": kwargs["output_name"],
+            "type": "array",
+            "items": {
+                "type": "string",
+                "url_type": "video",
+            }
+        }
+        return schema
+        
+    def save_video(self, filenames, **kwargs):
+        status, (preview_image, video_path) = filenames
+        cwd = os.getcwd()
+        preview_image = os.path.relpath(preview_image)
+        video_path = os.path.relpath(video_path)
+        results = {"ui": {"image": [preview_image], "video": [video_path]}}
+        print(results)
+        return results
+    
+    
 NODE_CLASS_MAPPINGS = {
     "ShellAgentPluginSaveImage": ShellAgentSaveImage,
+    "ShellAgentPluginSaveImages": ShellAgentSaveImages,
+    "ShellAgentPluginSaveVideoVHS": ShellAgentSaveVideoVHS,
 }
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "ShellAgentPluginSaveImage": "Save Image (ShellAgent Plugin)"
+    "ShellAgentPluginSaveImage": "Save Image (ShellAgent Plugin)",
+    "ShellAgentPluginSaveImages": "Save Images (ShellAgent Plugin)",
+    "ShellAgentPluginSaveVideoVHS": "Save Video - VHS (ShellAgent Plugin)",
 }

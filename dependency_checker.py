@@ -2,7 +2,10 @@ import os
 import subprocess
 import json
 import logging
+from functools import partial
+
 from .utils import compute_sha256, windows_to_linux_path
+from .file_upload import collect_local_file, process_local_file_path_async
 
 ComfyUIModelLoaders = {
     'VAELoader': (["vae_name"], "vae"),
@@ -75,6 +78,12 @@ def handle_model_info(ckpt_path):
 
 
 def inspect_repo_version(module_path):
+    # Create and return the JSON result
+    result = {
+        "name": os.path.basename(module_path),
+        "repo": "",
+        "commit": ""
+    }
     # Get the remote repository URL
     try:
         remote_url = subprocess.check_output(
@@ -82,7 +91,7 @@ def inspect_repo_version(module_path):
             cwd=module_path
         ).strip().decode()
     except subprocess.CalledProcessError:
-        return {"error": "Failed to get remote repository URL"}
+        return result
 
     # Get the latest commit hash
     try:
@@ -91,10 +100,11 @@ def inspect_repo_version(module_path):
             cwd=module_path
         ).strip().decode()
     except subprocess.CalledProcessError:
-        return {"error": "Failed to get commit hash"}
+        return result
 
     # Create and return the JSON result
     result = {
+        "name": os.path.basename(module_path),
         "repo": remote_url,
         "commit": commit_hash
     }
@@ -105,6 +115,8 @@ def resolve_dependencies(prompt): # resolve custom nodes and models at the same 
     from nodes import NODE_CLASS_MAPPINGS
     custom_nodes = []
     ckpt_paths = []
+    
+    file_mapping_dict = {}
     for node_id, node_info in prompt.items():
         node_class_type = node_info["class_type"]
         node_cls = NODE_CLASS_MAPPINGS[node_class_type]
@@ -115,11 +127,21 @@ def resolve_dependencies(prompt): # resolve custom nodes and models at the same 
             for input_name in input_names:
                 ckpt_path = os.path.join("models", save_path, node_info["inputs"][input_name])
                 ckpt_paths.append(ckpt_path)
+        list(map(partial(collect_local_file, mapping_dict=file_mapping_dict), node_info["inputs"].values()))
             
     ckpt_paths = list(set(ckpt_paths))
     custom_nodes = list(set(custom_nodes))
+    # step 0: comfyui version
+    comfyui_version = inspect_repo_version("./")
+    
     # step 1: custom nodes
-    custom_nodes_list = [inspect_repo_version(custom_node.replace(".", "/")) for custom_node in custom_nodes]
+    custom_nodes_list = []
+    for custom_node in custom_nodes:
+        try:
+            repo_info = inspect_repo_version(custom_node.replace(".", "/"))
+            custom_nodes_list.append(repo_info)
+        except:
+            print(f"failed to resolve repo info of {custom_node}")
     
     # step 2: models
     models_dict = {}
@@ -127,8 +149,18 @@ def resolve_dependencies(prompt): # resolve custom nodes and models at the same 
         model_id, item = handle_model_info(ckpt_path)
         models_dict[model_id] = item
 
-    # step 1: handle the custom nodes version
-    import pdb; pdb.set_trace()
-    # return ckpt_pat
-    # # step 1:
-    # for class_type in 
+    # step 3: handle local files
+    process_local_file_path_async(file_mapping_dict, max_workers=20)
+    files_dict = {v[0]: {"filename": v[2], "urls": [v[1]]} for v in file_mapping_dict.values()}
+    dependencies = {
+        "models": models_dict,
+        "files": files_dict
+    }
+    
+    results = {
+        "comfyui_version": comfyui_version,
+        "custom_nodes": custom_nodes_list,
+        "models": models_dict,
+        "files": files_dict,
+    }
+    return results
