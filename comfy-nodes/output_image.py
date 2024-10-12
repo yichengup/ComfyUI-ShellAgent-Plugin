@@ -69,11 +69,8 @@ class ShellAgentSaveVideoVHS:
     def validate(cls, **kwargs):
         schema = {
             "title": kwargs["output_name"],
-            "type": "array",
-            "items": {
-                "type": "string",
-                "url_type": "video",
-            }
+            "type": "string",
+            "url_type": "video",
         }
         return schema
         

@@ -23,26 +23,30 @@ ComfyUIModelLoaders = {
     'CLIPVisionLoader': (["clip_name"], "clip_vision"),
     'StyleModelLoader': (["style_model_name"], "style_models"),
     'GLIGENLoader': (["gligen_name"], "gligen"),
+    'ImageOnlyCheckpointLoader': (["ckpt_name"], "checkpoints"),
+    "UpscaleModelLoader": (["model_name"], "upscale_models"),
+    "TripleCLIPLoader": (["clip_name1", "clip_name2", "clip_name3"], "clip"),
+    "HypernetworkLoader": (["hypernetwork_name"], "hypernetworks")
 }
 
 
-ComfyUIFileLoaders = {
-    'VAELoader': (["vae_name"], "vae"),
-    'CheckpointLoader': (["ckpt_name"], "checkpoints"),
-    'CheckpointLoaderSimple': (["ckpt_name"], "checkpoints"),
-    'DiffusersLoader': (["model_path"], "diffusers"),
-    'unCLIPCheckpointLoader': (["ckpt_name"], "checkpoints"),
-    'LoraLoader': (["lora_name"], "loras"),
-    'LoraLoaderModelOnly': (["lora_name"], "loras"),
-    'ControlNetLoader': (["control_net_name"], "controlnet"),
-    'DiffControlNetLoader': (["control_net_name"], "controlnet"),
-    'UNETLoader': (["unet_name"], "unet"),
-    'CLIPLoader': (["clip_name"], "clip"),
-    'DualCLIPLoader': (["clip_name1", "clip_name2"], "clip"),
-    'CLIPVisionLoader': (["clip_name"], "clip_vision"),
-    'StyleModelLoader': (["style_model_name"], "style_models"),
-    'GLIGENLoader': (["gligen_name"], "gligen"),
-}
+# ComfyUIFileLoaders = {
+#     'VAELoader': (["vae_name"], "vae"),
+#     'CheckpointLoader': (["ckpt_name"], "checkpoints"),
+#     'CheckpointLoaderSimple': (["ckpt_name"], "checkpoints"),
+#     'DiffusersLoader': (["model_path"], "diffusers"),
+#     'unCLIPCheckpointLoader': (["ckpt_name"], "checkpoints"),
+#     'LoraLoader': (["lora_name"], "loras"),
+#     'LoraLoaderModelOnly': (["lora_name"], "loras"),
+#     'ControlNetLoader': (["control_net_name"], "controlnet"),
+#     'DiffControlNetLoader': (["control_net_name"], "controlnet"),
+#     'UNETLoader': (["unet_name"], "unet"),
+#     'CLIPLoader': (["clip_name"], "clip"),
+#     'DualCLIPLoader': (["clip_name1", "clip_name2"], "clip"),
+#     'CLIPVisionLoader': (["clip_name"], "clip_vision"),
+#     'StyleModelLoader': (["style_model_name"], "style_models"),
+#     'GLIGENLoader': (["gligen_name"], "gligen"),
+# }
 
 
 model_list_json = json.load(open(os.path.join(os.path.dirname(__file__), "model_info.json")))
