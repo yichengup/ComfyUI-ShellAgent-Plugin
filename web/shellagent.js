@@ -35,4 +35,18 @@ app.registerExtension({
 			}
     });
   },
+});app.registerExtension({
+  name: "Comfy.ShellAgent.UploadImage",
+  async beforeRegisterNodeDef(nodeType, nodeData, app) {
+    if (nodeData.name === "ShellAgentPluginInputImage") {
+      if (
+        nodeData?.input?.required?.default_value?.[1]?.image_upload === true
+      ) {
+        nodeData.input.required.upload = [
+          "IMAGEUPLOAD",
+          { widget: "default_value" },
+        ];
+      }
+    }
+  },
 });
