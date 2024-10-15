@@ -48,5 +48,42 @@ app.registerExtension({
         ];
       }
     }
+
+    if (nodeData.name.indexOf('ShellAgentPlugin') === -1) {
+      addMenuHandler(nodeType, function (_, options) {
+        if (this.widgets) {
+          let toInput = [];
+
+          for (const w of this.widgets) {
+            if (["customtext"].indexOf(w.type) > -1) {
+              toInput.push({
+                content: `Input Text -> ${w.name}`,
+                callback: () => {
+                  alert('Not implemented')
+                }
+              })
+            }
+          }
+
+          if (toInput.length) {
+            options.unshift({
+              content: "Convert to ShellAgent",
+              submenu: {
+                options: toInput
+              }
+            })
+          }
+        }
+      })
+    }
   },
 });
+
+function addMenuHandler(nodeType, cb) {
+  const getOpts = nodeType.prototype.getExtraMenuOptions;
+  nodeType.prototype.getExtraMenuOptions = function () {
+    const r = getOpts.apply(this, arguments);
+    cb.apply(this, arguments);
+    return r;
+  };
+}
