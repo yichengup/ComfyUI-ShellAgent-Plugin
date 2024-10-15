@@ -88,8 +88,12 @@ class ShellAgentPluginInputVideo:
                     {"multiline": False, "default": "input_video"},
                 ),
                 "default_value": (
-                    "STRING", {"video_upload": True, "default": files[0] if len(files) else ""},
+                    sorted(files),
+                    { "video_upload": True }
                 ),
+                # "default_value": (
+                #     "STRING", {"video_upload": True, "default": files[0] if len(files) else ""},
+                # ),
             },
             "optional": {
                 "description": (
