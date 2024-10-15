@@ -1,12 +1,27 @@
 import { app } from "../../scripts/app.js";
-import { api } from "../../scripts/api.js";
+
+const id = "ShellAgent.InputText.Choices";
+
+const getPresets = () => {
+  let items;
+  try {
+    items = JSON.parse(localStorage.getItem(id));
+  } catch (error) { }
+  if (!items || !items.length) {
+    // items = [{ name: "default negative", value: "worst quality" }];
+    items = [""];
+  }
+  return items;
+};
+
+let presets = getPresets();
 
 app.registerExtension({
   name: "Shellagent.extension",
   async setup() {
-		window.parent.postMessage({
-			type: 'loaded'
-		}, '*');
+    window.parent.postMessage({
+      type: 'loaded'
+    }, '*');
     window.addEventListener('message', (event) => {
       if (event.data.type === 'save') {
         app.graphToPrompt().then(data => {
@@ -17,26 +32,122 @@ app.registerExtension({
           }, "*");
         });
       }
-			if (event.data.type === 'load') {
-				app.loadGraphData(event.data.data, true, false);
-			}
-			if (event.data.type === 'load_default') {
-				// 使用FileReader读取JSON文件
-				fetch('extensions/ComfyUI-ShellAgent-Plugin/shellagent_default.json')
-					.then(response => response.blob())
-					.then(blob => {
-						const reader = new FileReader();
-						reader.onload = function(e) {
-							const json = JSON.parse(e.target.result);
-							app.loadGraphData(json, true, false);
-						};
-						reader.readAsText(blob);
-					})
-					.catch(error => console.error('加载默认JSON文件时出错:', error));
-			}
+      if (event.data.type === 'load') {
+        app.loadGraphData(event.data.data, true, false);
+      }
+      if (event.data.type === 'load_default') {
+        // 使用FileReader读取JSON文件
+        fetch('extensions/ComfyUI-ShellAgent-Plugin/shellagent_default.json')
+          .then(response => response.blob())
+          .then(blob => {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+              const json = JSON.parse(e.target.result);
+              app.loadGraphData(json, true, false);
+            };
+            reader.readAsText(blob);
+          })
+          .catch(error => console.error('加载默认JSON文件时出错:', error));
+      }
     });
   },
   async beforeRegisterNodeDef(nodeType, nodeData, app) {
+
+    if (nodeData.name === "ShellAgentPluginInputText") {
+
+      chainCallback(nodeType.prototype, "onNodeCreated", function () {
+
+        const widget = this.addWidget("combo", "value", presets[0], () => {}, {
+					values: presets,
+				});
+
+        this.addWidget('button', 'manage choices', null, () => {
+          const container = document.createElement("div");
+          Object.assign(container.style, {
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            gap: "10px",
+          });
+
+          const addNew = document.createElement("button");
+          addNew.textContent = "Add New";
+          addNew.classList.add("pysssss-presettext-addnew");
+          Object.assign(addNew.style, {
+            fontSize: "13px",
+            gridColumn: "1 / 3",
+            color: "dodgerblue",
+            width: "auto",
+            textAlign: "center",
+          });
+          addNew.onclick = () => {
+            addRow("");
+          };
+          container.append(addNew);
+
+          function addRow(p) {
+
+            const value = document.createElement("input");
+            const valueLbl = document.createElement("label");
+            value.value = p;
+            Object.assign(value.style, {
+              width: "250px",
+            });
+            valueLbl.textContent = "Value:";
+            valueLbl.append(value);
+
+            Object.assign(valueLbl.style, {
+              gridColumn: "1 / 3",
+              width: "auto",
+            });
+
+            addNew.before(valueLbl);
+          }
+          for (const p of presets) {
+            addRow(p);
+          }
+
+          const help = document.createElement("span");
+          help.textContent = "To remove a preset set the value to blank";
+          help.style.gridColumn = "1 / 3";
+          container.append(help);
+
+          dialog.show("");
+          dialog.textElement.append(container);
+        })
+
+        const dialog = new app.ui.dialog.constructor();
+        dialog.element.classList.add("comfy-settings");
+
+        const closeButton = dialog.element.querySelector("button");
+        closeButton.textContent = "CANCEL";
+        const saveButton = document.createElement("button");
+        saveButton.textContent = "SAVE";
+        saveButton.onclick = function () {
+          const inputs = dialog.element.querySelectorAll("input");
+          const p = [];
+          for (let i = 0; i < inputs.length; i += 1) {
+            const v = inputs[i];
+            if (!v.value.trim()) {
+              continue;
+            }
+            p.push(v.value);
+          }
+
+          widget.options.values = p;
+          if (!widget.options.values.includes(widget.value)) {
+            widget.value = widget.options.values[0];
+          }
+
+          presets = p;
+          localStorage.setItem(id, JSON.stringify(presets));
+
+          dialog.close();
+        };
+
+        closeButton.before(saveButton);
+      })
+    }
+
     if (nodeData.name === "ShellAgentPluginInputImage") {
       if (
         nodeData?.input?.required?.default_value?.[1]?.image_upload === true
