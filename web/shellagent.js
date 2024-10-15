@@ -59,7 +59,9 @@ app.registerExtension({
               toInput.push({
                 content: `Input Text -> ${w.name}`,
                 callback: () => {
-                  alert('Not implemented')
+                  this.convertWidgetToInput(w);
+    							const node = addNode("ShellAgentPluginInputText", this, { before: true });
+                  node.connect(0, this, 1);
                 }
               })
             }
@@ -86,4 +88,18 @@ function addMenuHandler(nodeType, cb) {
     cb.apply(this, arguments);
     return r;
   };
+}
+
+function addNode(name, nextTo, options) {
+	options = { select: true, shiftY: 0, before: false, ...(options || {}) };
+	const node = LiteGraph.createNode(name);
+	app.graph.add(node);
+	node.pos = [
+		options.before ? nextTo.pos[0] - node.size[0] - 30 : nextTo.pos[0] + nextTo.size[0] + 30,
+		nextTo.pos[1] + options.shiftY,
+	];
+	if (options.select) {
+		app.canvas.selectNode(node, false);
+	}
+	return node;
 }
