@@ -1,4 +1,5 @@
 import { app } from "../../scripts/app.js";
+import { api } from "../../scripts/api.js";
 
 app.registerExtension({
   name: "Shellagent.extension",
@@ -35,8 +36,6 @@ app.registerExtension({
 			}
     });
   },
-});app.registerExtension({
-  name: "Comfy.ShellAgentPlugin",
   async beforeRegisterNodeDef(nodeType, nodeData, app) {
     if (nodeData.name === "ShellAgentPluginInputImage") {
       if (
