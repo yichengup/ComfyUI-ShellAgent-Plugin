@@ -36,7 +36,7 @@ app.registerExtension({
     });
   },
 });app.registerExtension({
-  name: "Comfy.ShellAgent.UploadImage",
+  name: "Comfy.ShellAgentPlugin",
   async beforeRegisterNodeDef(nodeType, nodeData, app) {
     if (nodeData.name === "ShellAgentPluginInputImage") {
       if (
