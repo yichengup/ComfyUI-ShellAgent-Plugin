@@ -55,8 +55,8 @@ app.registerExtension({
 
     if (["ShellAgentPluginInputText", "ShellAgentPluginInputFloat"].indexOf(nodeData.name) > -1) {
       chainCallback(nodeType.prototype, "onNodeCreated", function () {
-        const widget = this.addWidget("combo", "choices", presets[0], () => { }, {
-          values: presets,
+        const widget = this.addWidget("string", "choices", presets, () => { }, {
+          value: presets,
         });
 
         this.addWidget('button', 'manage choices', null, () => {
@@ -131,11 +131,8 @@ app.registerExtension({
             p.push(v.value);
           }
 
-          widget.options.values = p;
-          if (!widget.options.values.includes(widget.value)) {
-            widget.value = widget.options.values[0];
-          }
-
+          widget.value = p;
+          
           presets = p;
           localStorage.setItem(id, JSON.stringify(presets));
 
