@@ -9,7 +9,6 @@ const getPresets = () => {
     items = JSON.parse(localStorage.getItem(id));
   } catch (error) { }
   if (!items || !items.length) {
-    // items = [{ name: "default negative", value: "worst quality" }];
     items = [""];
   }
   return items;
@@ -54,14 +53,13 @@ app.registerExtension({
   },
   async beforeRegisterNodeDef(nodeType, nodeData, app) {
 
-    if (nodeData.name === "ShellAgentPluginInputText") {
-
+    if (["ShellAgentPluginInputText", "ShellAgentPluginInputFloat"].indexOf(nodeData.name) > -1) {
       chainCallback(nodeType.prototype, "onNodeCreated", function () {
+        const widget = this.addWidget("combo", "choices", presets[0], () => { }, {
+          values: presets,
+        });
 
-        const widget = this.addWidget("combo", "value", presets[0], () => {}, {
-					values: presets,
-				});
-
+        console.log('nodeData', nodeData)
         this.addWidget('button', 'manage choices', null, () => {
           const container = document.createElement("div");
           Object.assign(container.style, {
