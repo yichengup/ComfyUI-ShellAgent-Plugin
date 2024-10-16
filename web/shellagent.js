@@ -59,7 +59,6 @@ app.registerExtension({
           values: presets,
         });
 
-        console.log('nodeData', nodeData)
         this.addWidget('button', 'manage choices', null, () => {
           const container = document.createElement("div");
           Object.assign(container.style, {
