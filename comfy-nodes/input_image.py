@@ -17,17 +17,17 @@ class ShellAgentPluginInputImage:
             "required": {
                 "input_name": (
                     "STRING",
-                    {"multiline": False, "default": "input_image", "forceInput": True},
+                    {"multiline": False, "default": "input_image", "forceInput": False},
                 ),
                 "default_value": (
                     # "STRING", {"image_upload": True, "default": files[0] if len(files) else ""},
-                    sorted(files), {"image_upload": True, "forceInput": True}
+                    sorted(files), {"image_upload": True, "forceInput": False}
                 ),
             },
             "optional": {
                 "description": (
                     "STRING",
-                    {"multiline": True, "default": "", "forceInput": True},
+                    {"multiline": True, "default": "", "forceInput": False},
                 ),
             }
         }
