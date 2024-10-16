@@ -122,6 +122,10 @@ async def shellagent_get_file(request):
 async def shellagent_export(request):
     data = await request.json()
     prompt = data["prompt"]
+    custom_dependencies = data.get("custom_dependencies",  {
+        "models": {},
+        "custom_nodes": {}
+    })
     # extra_data = data["extra_data"]
     workflow_id = str(uuid.uuid4())
     
@@ -137,7 +141,7 @@ async def shellagent_export(request):
     try:
         schemas = schema_validator(prompt)
         # custom_node.json
-        dependency_results = resolve_dependencies(prompt)
+        dependency_results = resolve_dependencies(prompt, custom_dependencies)
         # save_root = os.path.join(WORKFLOW_ROOT, workflow_id)
         # os.makedirs(save_root, exist_ok=True)
         
@@ -162,6 +166,6 @@ async def shellagent_export(request):
         status = 400
         return_dict = {
             "success": False,
-            "message": str(traceback.print_exc())
+            "message": str(traceback.format_exc()),
         }
     return web.json_response(return_dict, status=status)

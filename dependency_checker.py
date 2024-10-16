@@ -26,7 +26,9 @@ ComfyUIModelLoaders = {
     'ImageOnlyCheckpointLoader': (["ckpt_name"], "checkpoints"),
     "UpscaleModelLoader": (["model_name"], "upscale_models"),
     "TripleCLIPLoader": (["clip_name1", "clip_name2", "clip_name3"], "clip"),
-    "HypernetworkLoader": (["hypernetwork_name"], "hypernetworks")
+    "HypernetworkLoader": (["hypernetwork_name"], "hypernetworks"),
+    "SUPIR_model_loader_v2": (["supir_model"], "checkpoints"),
+    "SUPIR_model_loader_v2_clip": (["supir_model"], "checkpoints"),
 }
 
 
@@ -114,8 +116,21 @@ def inspect_repo_version(module_path):
     }
     return result
 
+def fetch_model_searcher_results(model_ids):
+    import requests
+    url = "https://shellagent.myshell.ai/models_searcher/search_urls"
+    headers = {
+        "Content-Type": "application/json"
+    }
+    data = {
+        "sha256": model_ids
+    }
 
-def resolve_dependencies(prompt): # resolve custom nodes and models at the same time
+    response = requests.post(url, headers=headers, json=data)
+    results = [item[:10] for item in response.json()]
+    return results
+
+def resolve_dependencies(prompt, custom_dependencies): # resolve custom nodes and models at the same time
     from nodes import NODE_CLASS_MAPPINGS
     custom_nodes = []
     ckpt_paths = []
@@ -144,22 +159,37 @@ def resolve_dependencies(prompt): # resolve custom nodes and models at the same 
         try:
             repo_info = inspect_repo_version(custom_node.replace(".", "/"))
             custom_nodes_list.append(repo_info)
+            if repo_info["repo"] == "":
+                repo_info["require_recheck"] = True
+                if repo_info["name"] in custom_dependencies["custom_nodes"]:
+                    repo_info["repo"] = custom_dependencies["custom_nodes"][repo_info["name"]].get("repo", "")
+                    repo_info["commit"] = custom_dependencies["custom_nodes"][repo_info["name"]].get("commit", "")
         except:
             print(f"failed to resolve repo info of {custom_node}")
     
     # step 2: models
     models_dict = {}
+    missing_model_ids = []
     for ckpt_path in ckpt_paths:
         model_id, item = handle_model_info(ckpt_path)
         models_dict[model_id] = item
+        if len(item["urls"]) == 0:
+            item["require_recheck"] = True
+            if model_id in custom_dependencies["models"]:
+                item["urls"] = custom_dependencies["models"][model_id].get("urls", [])
+            missing_model_ids.append(model_id)
+            
+    # try to fetch from myshell model searcher
+    missing_model_results_myshell = fetch_model_searcher_results(missing_model_ids)
+    for missing_model_id, missing_model_urls in zip(missing_model_ids, missing_model_results_myshell):
+        if len(missing_model_urls) > 0:
+            models_dict[missing_model_id]["require_recheck"] = False
+            models_dict[missing_model_id]["urls"] = missing_model_urls
+            print("successfully fetch results from myshell", models_dict[missing_model_id])
 
     # step 3: handle local files
     process_local_file_path_async(file_mapping_dict, max_workers=20)
     files_dict = {v[0]: {"filename": v[2], "urls": [v[1]]} for v in file_mapping_dict.values()}
-    dependencies = {
-        "models": models_dict,
-        "files": files_dict
-    }
     
     results = {
         "comfyui_version": comfyui_version,
