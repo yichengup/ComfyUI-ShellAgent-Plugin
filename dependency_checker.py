@@ -25,6 +25,8 @@ def handle_model_info(ckpt_path):
         model_id = metadata["id"]
     else:
         logging.info(f"computing sha256 of {ckpt_path}")
+        if not os.path.isfile(ckpt_path):
+            raise NotImplementedError(f"please install {ckpt_path} first!")
         model_id = compute_sha256(ckpt_path)
         data = {
             "id": model_id,
