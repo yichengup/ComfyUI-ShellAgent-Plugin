@@ -136,7 +136,7 @@ app.registerExtension({
           }
 
           widget.value = p;
-          
+
           presets = p;
           localStorage.setItem(id, JSON.stringify(presets));
 
@@ -190,15 +190,34 @@ app.registerExtension({
           for (const w of this.widgets) {
             if (["customtext"].indexOf(w.type) > -1) {
               toInput.push({
-                content: `Input Text -> ${w.name}`,
+                content: `${w.name} <- Input Text`,
                 callback: () => {
                   this.convertWidgetToInput(w);
                   const node = addNode("ShellAgentPluginInputText", this, { before: true });
-                  if (nodeData.name === 'CLIPTextEncode') {
-                    node.connect(0, this, 1);
-                  } else {
-                    window.alert('[ShellAgent] Unsupported quick operation.')
-                  }
+                  // if (nodeData.name === 'CLIPTextEncode') {
+                  node.connect(0, this, this.inputs.length - 1);
+                  // } else {
+                  //   window.alert('[ShellAgent] Unsupported quick operation.')
+                  // }
+                }
+              })
+            }
+            if (["number"].indexOf(w.type) > -1) {
+              toInput.push({
+                content: `${w.name} <- Input Interger`,
+                callback: () => {
+                  this.convertWidgetToInput(w);
+                  const node = addNode("ShellAgentPluginInputInteger", this, { before: true });
+                  node.connect(0, this, this.inputs.length - 1);
+                }
+              })
+
+              toInput.push({
+                content: `${w.name} <- Input Float`,
+                callback: () => {
+                  this.convertWidgetToInput(w);
+                  const node = addNode("ShellAgentPluginInputFloat", this, { before: true });
+                  node.connect(0, this, this.inputs.length - 1);
                 }
               })
             }
