@@ -57,8 +57,8 @@ class ShellAgentPluginInputImage:
             if image_path.startswith('http'):
                 import requests
                 from io import BytesIO
-                print("Fetching image from url: ", image)
-                response = requests.get(image)
+                print("Fetching image from url: ", image_path)
+                response = requests.get(image_path)
                 image = Image.open(BytesIO(response.content))
             elif image_path.startswith('data:image/png;base64,') or image_path.startswith('data:image/jpeg;base64,') or image_path.startswith('data:image/jpg;base64,'):
                 import base64
