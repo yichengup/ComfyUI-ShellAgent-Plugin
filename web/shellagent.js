@@ -53,7 +53,7 @@ app.registerExtension({
   },
   async beforeRegisterNodeDef(nodeType, nodeData, app) {
 
-    if (["ShellAgentPluginInputText", "ShellAgentPluginInputFloat"].indexOf(nodeData.name) > -1) {
+    if (["ShellAgentPluginInputText", "ShellAgentPluginInputFloat", "ShellAgentPluginInputInteger"].indexOf(nodeData.name) > -1) {
       chainCallback(nodeType.prototype, "onNodeCreated", function () {
         const widget = this.addWidget("string", "choices", presets, () => { }, {
           value: presets,
@@ -85,6 +85,10 @@ app.registerExtension({
           function addRow(p) {
 
             const value = document.createElement("input");
+            if (["ShellAgentPluginInputFloat", "ShellAgentPluginInputInteger"].indexOf(nodeData.name) > -1) {
+              value.type = 'number';
+            }
+
             const valueLbl = document.createElement("label");
             value.value = p;
             Object.assign(value.style, {
