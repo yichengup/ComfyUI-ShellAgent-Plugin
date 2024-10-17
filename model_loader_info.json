@@ -138,5 +138,11 @@
       "field_name": "lora_name",
       "save_path": "loras"
     }
+  ],
+  "LoRA Stacker": [
+    {
+      "field_name": "lora_name_([1-9]|[1-4][0-9]|50)",
+      "save_path": "loras"
+    }
   ]
 }
