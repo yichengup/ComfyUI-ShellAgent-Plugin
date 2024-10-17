@@ -132,6 +132,7 @@ def resolve_dependencies(prompt, custom_dependencies): # resolve custom nodes an
         list(map(partial(collect_local_file, mapping_dict=file_mapping_dict), node_info["inputs"].values()))
             
     ckpt_paths = list(set(ckpt_paths))
+    print("ckpt_paths:", ckpt_paths)
     custom_nodes = list(set(custom_nodes))
     # step 0: comfyui version
     comfyui_version = inspect_repo_version("./")
