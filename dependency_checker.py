@@ -3,55 +3,17 @@ import subprocess
 import json
 import logging
 from functools import partial
+import re
 
 from .utils import compute_sha256, windows_to_linux_path
 from .file_upload import collect_local_file, process_local_file_path_async
 
-ComfyUIModelLoaders = {
-    'VAELoader': (["vae_name"], "vae"),
-    'CheckpointLoader': (["ckpt_name"], "checkpoints"),
-    'CheckpointLoaderSimple': (["ckpt_name"], "checkpoints"),
-    'DiffusersLoader': (["model_path"], "diffusers"),
-    'unCLIPCheckpointLoader': (["ckpt_name"], "checkpoints"),
-    'LoraLoader': (["lora_name"], "loras"),
-    'LoraLoaderModelOnly': (["lora_name"], "loras"),
-    'ControlNetLoader': (["control_net_name"], "controlnet"),
-    'DiffControlNetLoader': (["control_net_name"], "controlnet"),
-    'UNETLoader': (["unet_name"], "unet"),
-    'CLIPLoader': (["clip_name"], "clip"),
-    'DualCLIPLoader': (["clip_name1", "clip_name2"], "clip"),
-    'CLIPVisionLoader': (["clip_name"], "clip_vision"),
-    'StyleModelLoader': (["style_model_name"], "style_models"),
-    'GLIGENLoader': (["gligen_name"], "gligen"),
-    'ImageOnlyCheckpointLoader': (["ckpt_name"], "checkpoints"),
-    "UpscaleModelLoader": (["model_name"], "upscale_models"),
-    "TripleCLIPLoader": (["clip_name1", "clip_name2", "clip_name3"], "clip"),
-    "HypernetworkLoader": (["hypernetwork_name"], "hypernetworks"),
-    "SUPIR_model_loader_v2": (["supir_model"], "checkpoints"),
-    "SUPIR_model_loader_v2_clip": (["supir_model"], "checkpoints"),
-}
-
-
-# ComfyUIFileLoaders = {
-#     'VAELoader': (["vae_name"], "vae"),
-#     'CheckpointLoader': (["ckpt_name"], "checkpoints"),
-#     'CheckpointLoaderSimple': (["ckpt_name"], "checkpoints"),
-#     'DiffusersLoader': (["model_path"], "diffusers"),
-#     'unCLIPCheckpointLoader': (["ckpt_name"], "checkpoints"),
-#     'LoraLoader': (["lora_name"], "loras"),
-#     'LoraLoaderModelOnly': (["lora_name"], "loras"),
-#     'ControlNetLoader': (["control_net_name"], "controlnet"),
-#     'DiffControlNetLoader': (["control_net_name"], "controlnet"),
-#     'UNETLoader': (["unet_name"], "unet"),
-#     'CLIPLoader': (["clip_name"], "clip"),
-#     'DualCLIPLoader': (["clip_name1", "clip_name2"], "clip"),
-#     'CLIPVisionLoader': (["clip_name"], "clip_vision"),
-#     'StyleModelLoader': (["style_model_name"], "style_models"),
-#     'GLIGENLoader': (["gligen_name"], "gligen"),
-# }
-
 
 model_list_json = json.load(open(os.path.join(os.path.dirname(__file__), "model_info.json")))
+model_loaders_info = json.load(open(os.path.join(os.path.dirname(__file__), "model_loader_info.json")))
+
+model_suffix = [".ckpt", ".safetensors", ".bin"]
+
 def handle_model_info(ckpt_path):
     ckpt_path = windows_to_linux_path(ckpt_path)
     filename = os.path.basename(ckpt_path)
@@ -141,11 +103,30 @@ def resolve_dependencies(prompt, custom_dependencies): # resolve custom nodes an
         node_cls = NODE_CLASS_MAPPINGS[node_class_type]
         if hasattr(node_cls, "RELATIVE_PYTHON_MODULE"):
             custom_nodes.append(node_cls.RELATIVE_PYTHON_MODULE)
-        if node_class_type in ComfyUIModelLoaders:
-            input_names, save_path = ComfyUIModelLoaders[node_class_type]
-            for input_name in input_names:
-                ckpt_path = os.path.join("models", save_path, node_info["inputs"][input_name])
-                ckpt_paths.append(ckpt_path)
+        if node_class_type in model_loaders_info:
+            for field_name, filename in node_info["inputs"].items():
+                for item in model_loaders_info[node_class_type]:
+                    pattern = item["field_name"]
+                    if re.match(f"^{pattern}$", field_name):
+                        ckpt_path = os.path.join("models", item["save_path"], filename)
+                        ckpt_paths.append(ckpt_path)
+        else:
+            for field_name, filename in node_info["inputs"].items():
+                is_model = False
+                for possible_suffix in model_suffix:
+                    if filename.endswith(possible_suffix):
+                        is_model = True
+                if is_model:
+                    # find possible paths
+                    matching_files = []
+                    # Walk through all subdirectories and files in the directory
+                    for root, dirs, files in os.walk("models"):
+                        for file in files:
+                            if file.endswith(filename):
+                                # Add full file path to the result
+                                matching_files.append(os.path.join(root, file))
+                    if len(matching_files) == 1:
+                        ckpt_paths.append(matching_files[0])
         list(map(partial(collect_local_file, mapping_dict=file_mapping_dict), node_info["inputs"].values()))
             
     ckpt_paths = list(set(ckpt_paths))
