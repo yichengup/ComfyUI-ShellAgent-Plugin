@@ -112,6 +112,8 @@ def resolve_dependencies(prompt, custom_dependencies): # resolve custom nodes an
                         ckpt_paths.append(ckpt_path)
         else:
             for field_name, filename in node_info["inputs"].items():
+                if type(filename) != str:
+                    continue
                 is_model = False
                 for possible_suffix in model_suffix:
                     if filename.endswith(possible_suffix):
