@@ -99,7 +99,9 @@ def resolve_dependencies(prompt, custom_dependencies): # resolve custom nodes an
     
     file_mapping_dict = {}
     for node_id, node_info in prompt.items():
-        node_class_type = node_info["class_type"]
+        node_class_type = node_info.get("class_type")
+        if node_class_type is None:
+            raise NotImplementedError(f"Missing nodes founded, please first install the missing nodes using ComfyUI Manager")
         node_cls = NODE_CLASS_MAPPINGS[node_class_type]
         if hasattr(node_cls, "RELATIVE_PYTHON_MODULE"):
             custom_nodes.append(node_cls.RELATIVE_PYTHON_MODULE)
