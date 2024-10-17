@@ -194,7 +194,11 @@ app.registerExtension({
                 callback: () => {
                   this.convertWidgetToInput(w);
                   const node = addNode("ShellAgentPluginInputText", this, { before: true });
-                  node.connect(0, this, 1);
+                  if (nodeData.name === 'CLIPTextEncode') {
+                    node.connect(0, this, 1);
+                  } else {
+                    window.alert('[ShellAgent] Unsupported quick operation.')
+                  }
                 }
               })
             }
