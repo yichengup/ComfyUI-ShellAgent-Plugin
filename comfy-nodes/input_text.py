@@ -150,8 +150,8 @@ class ShellAgentPluginInputInteger:
             }
         }
 
-    RETURN_TYPES = ("FLOAT",)
-    RETURN_NAMES = ("float",)
+    RETURN_TYPES = ("INT",)
+    RETURN_NAMES = ("int",)
 
     FUNCTION = "run"
 
