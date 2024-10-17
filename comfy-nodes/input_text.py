@@ -22,10 +22,10 @@ class ShellAgentPluginInputText:
                     "STRING",
                     {"multiline": True, "default": ""},
                 ),
-                # "choices": (
-                #     "STRING",
-                #     {"multiline": False, "default": ""},
-                # ),
+                "choices": (
+                    "STRING",
+                    {"multiline": False, "default": ""},
+                ),
             }
         }
 
@@ -79,10 +79,10 @@ class ShellAgentPluginInputFloat:
                     "STRING",
                     {"default": ""},
                 ),
-                # "choices": (
-                #     "STRING",
-                #     {"multiline": False, "default": ""},
-                # ),
+                "choices": (
+                    "STRING",
+                    {"multiline": False, "default": ""},
+                ),
             }
         }
 
@@ -146,7 +146,11 @@ class ShellAgentPluginInputInteger:
                 "description": (
                     "STRING",
                     {"multiline": True, "default": ""},
-                )
+                ),
+                "choices": (
+                    "STRING",
+                    {"multiline": False, "default": ""},
+                ),
             }
         }
 

@@ -1,21 +1,6 @@
 import { app } from "../../scripts/app.js";
 import { api } from "../../scripts/api.js";
 
-const id = "ShellAgent.InputText.Choices";
-
-const getPresets = () => {
-  let items;
-  try {
-    items = JSON.parse(localStorage.getItem(id));
-  } catch (error) { }
-  if (!items || !items.length) {
-    items = [""];
-  }
-  return items;
-};
-
-let presets = getPresets();
-
 app.registerExtension({
   name: "Shellagent.extension",
   async setup() {
@@ -55,9 +40,7 @@ app.registerExtension({
 
     if (["ShellAgentPluginInputText", "ShellAgentPluginInputFloat", "ShellAgentPluginInputInteger"].indexOf(nodeData.name) > -1) {
       chainCallback(nodeType.prototype, "onNodeCreated", function () {
-        const widget = this.addWidget("string", "choices", presets, () => { }, {
-          value: presets,
-        });
+        const widget = this.widgets.find(w => w.name === 'choices')
 
         this.addWidget('button', 'manage choices', null, () => {
           const container = document.createElement("div");
@@ -104,12 +87,22 @@ app.registerExtension({
 
             addNew.before(valueLbl);
           }
-          for (const p of presets) {
-            addRow(p);
+
+          let arr = []
+          if (typeof widget.value === 'string') {
+            try {
+              arr = JSON.parse(widget.value)
+            } catch { }
+          } else if(Array.isArray(widget.value)) {
+            arr = widget.value
+          }
+
+          for (const a of arr) {
+            addRow(a);
           }
 
           const help = document.createElement("span");
-          help.textContent = "To remove a preset set the value to blank";
+          help.textContent = "To remove a item set the value to blank";
           help.style.gridColumn = "1 / 3";
           container.append(help);
 
@@ -136,9 +129,6 @@ app.registerExtension({
           }
 
           widget.value = p;
-
-          presets = p;
-          localStorage.setItem(id, JSON.stringify(presets));
 
           dialog.close();
         };
