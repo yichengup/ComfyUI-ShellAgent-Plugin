@@ -146,7 +146,11 @@ class ShellAgentPluginInputInteger:
                 "description": (
                     "STRING",
                     {"multiline": True, "default": ""},
-                )
+                ),
+                "choices": (
+                    "STRING",
+                    {"multiline": False, "default": ""},
+                ),
             }
         }
 
