@@ -20,8 +20,8 @@ class ShellAgentPluginInputImage:
                     {"multiline": False, "default": "input_image", "forceInput": False},
                 ),
                 "default_value": (
-                    "STRING", {"image_upload": True, "default": files[0] if len(files) else ""},
-                    # sorted(files), {"image_upload": True, "forceInput": False}
+                    # "STRING", {"image_upload": True, "default": files[0] if len(files) else ""},
+                    sorted(files), {"image_upload": True, "forceInput": False}
                 ),
             },
             "optional": {
@@ -49,6 +49,16 @@ class ShellAgentPluginInputImage:
             "url_type": "image"
         }
         return schema
+    
+    @classmethod
+    def VALIDATE_INPUTS(s, image):
+        if image.startswith("http"):
+            return True
+        
+        if not folder_paths.exists_annotated_filepath(image):
+            return "Invalid image file: {}".format(image)
+
+        return True
 
     def run(self, input_name, default_value=None, display_name=None, description=None):
         input_dir = folder_paths.get_input_directory()
