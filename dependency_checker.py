@@ -13,7 +13,7 @@ from .file_upload import collect_local_file, process_local_file_path_async
 model_list_json = json.load(open(os.path.join(os.path.dirname(__file__), "model_info.json")))
 model_loaders_info = json.load(open(os.path.join(os.path.dirname(__file__), "model_loader_info.json")))
 
-model_suffix = [".ckpt", ".safetensors", ".bin", ".pth"]
+model_suffix = [".ckpt", ".safetensors", ".bin", ".pth", ".pt", ".onnx"]
 
 def handle_model_info(ckpt_path):
     ckpt_path = windows_to_linux_path(ckpt_path)
