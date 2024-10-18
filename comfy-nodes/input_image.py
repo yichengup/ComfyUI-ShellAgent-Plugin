@@ -51,8 +51,8 @@ class ShellAgentPluginInputImage:
         return schema
     
     @classmethod
-    def VALIDATE_INPUTS(s, **kwargs):
-        image = kwargs.get("default_value", "")
+    def VALIDATE_INPUTS(s, input_name, default_value, description=""):
+        image = default_value
         if image.startswith("http"):
             return True
         
