@@ -9,6 +9,11 @@
       "name": "ComfyUI-Advanced-ControlNet",
       "repo": "https://github.com/Kosinkadink/ComfyUI-Advanced-ControlNet.git",
       "commit": ""
-    }
+    },
+    {
+        "name": "ComfyUI_smZNodes",
+        "repo": "https://github.com/shiimizu/ComfyUI_smZNodes.git",
+        "commit": ""
+      },
   ]
 }
