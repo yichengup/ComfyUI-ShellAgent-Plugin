@@ -12,7 +12,7 @@ from .file_upload import collect_local_file, process_local_file_path_async
 model_list_json = json.load(open(os.path.join(os.path.dirname(__file__), "model_info.json")))
 model_loaders_info = json.load(open(os.path.join(os.path.dirname(__file__), "model_loader_info.json")))
 
-model_suffix = [".ckpt", ".safetensors", ".bin"]
+model_suffix = [".ckpt", ".safetensors", ".bin", ".pth"]
 
 def handle_model_info(ckpt_path):
     ckpt_path = windows_to_linux_path(ckpt_path)
@@ -123,6 +123,7 @@ def resolve_dependencies(prompt, custom_dependencies): # resolve custom nodes an
                     if filename.endswith(possible_suffix):
                         is_model = True
                 if is_model:
+                    print(f"find {filename}, is_model=True")
                     # find possible paths
                     matching_files = []
                     # Walk through all subdirectories and files in the directory
@@ -131,6 +132,7 @@ def resolve_dependencies(prompt, custom_dependencies): # resolve custom nodes an
                             if file.endswith(filename):
                                 # Add full file path to the result
                                 matching_files.append(os.path.join(root, file))
+                    print(f"matched files: {matching_files}")
                     if len(matching_files) == 1:
                         ckpt_paths.append(matching_files[0])
         list(map(partial(collect_local_file, mapping_dict=file_mapping_dict), node_info["inputs"].values()))
