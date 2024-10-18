@@ -12,6 +12,8 @@ from .file_upload import collect_local_file, process_local_file_path_async
 
 model_list_json = json.load(open(os.path.join(os.path.dirname(__file__), "model_info.json")))
 model_loaders_info = json.load(open(os.path.join(os.path.dirname(__file__), "model_loader_info.json")))
+node_deps_info = json.load(open(os.path.join(os.path.dirname(__file__), "node_deps_info.json")))
+
 
 model_suffix = [".ckpt", ".safetensors", ".bin", ".pth", ".pt", ".onnx"]
 
@@ -144,6 +146,7 @@ def resolve_dependencies(prompt, custom_dependencies): # resolve custom nodes an
     
     # step 1: custom nodes
     custom_nodes_list = []
+    custom_nodes_names = []
     for custom_node in custom_nodes:
         try:
             repo_info = inspect_repo_version(custom_node.replace(".", "/"))
@@ -153,8 +156,15 @@ def resolve_dependencies(prompt, custom_dependencies): # resolve custom nodes an
                 if repo_info["name"] in custom_dependencies["custom_nodes"]:
                     repo_info["repo"] = custom_dependencies["custom_nodes"][repo_info["name"]].get("repo", "")
                     repo_info["commit"] = custom_dependencies["custom_nodes"][repo_info["name"]].get("commit", "")
+            custom_nodes_names.append(repo_info["name"])
         except:
             print(f"failed to resolve repo info of {custom_node}")
+    
+    for repo_name in custom_nodes_names:
+        if repo_name in node_deps_info:
+            for deps_node in node_deps_info[repo_name]:
+                if deps_node["name"] not in custom_nodes_names:
+                    custom_nodes_list.append(deps_node)
     
     # step 2: models
     models_dict = {}

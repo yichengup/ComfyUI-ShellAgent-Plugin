@@ -1,0 +1,14 @@
+{
+  "ComfyUI-Easy-Use": [
+    {
+      "name": "ComfyUI-Inspire-Pack",
+      "repo": "https://github.com/ltdrdata/ComfyUI-Inspire-Pack.git",
+      "commit": ""
+    },
+    {
+      "name": "ComfyUI-Advanced-ControlNet",
+      "repo": "https://github.com/Kosinkadink/ComfyUI-Advanced-ControlNet.git",
+      "commit": ""
+    }
+  ]
+}
