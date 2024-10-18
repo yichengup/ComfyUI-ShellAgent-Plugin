@@ -4,6 +4,7 @@ import json
 import logging
 from functools import partial
 import re
+import glob
 
 from .utils import compute_sha256, windows_to_linux_path
 from .file_upload import collect_local_file, process_local_file_path_async
@@ -127,11 +128,9 @@ def resolve_dependencies(prompt, custom_dependencies): # resolve custom nodes an
                     # find possible paths
                     matching_files = []
                     # Walk through all subdirectories and files in the directory
-                    for root, dirs, files in os.walk("models"):
-                        for file in files:
-                            if file.endswith(filename):
-                                # Add full file path to the result
-                                matching_files.append(os.path.join(root, file))
+                    for possible_filename in glob.glob("models/**/*", recursive=True):
+                        if os.path.isfile(possible_filename) and possible_filename.endswith(filename):
+                            matching_files.append(possible_filename)
                     print(f"matched files: {matching_files}")
                     if len(matching_files) == 1:
                         ckpt_paths.append(matching_files[0])
