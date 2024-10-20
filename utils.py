@@ -1,9 +1,9 @@
 import hashlib
 import time
-from pathlib import PurePosixPath, Path
+from pathlib import PurePosixPath, Path, PureWindowsPath
 
 def windows_to_linux_path(windows_path):
-    return str(PurePosixPath(Path(windows_path)))
+    return PureWindowsPath(windows_path).as_posix()
 
 def compute_sha256(file_path, chunk_size=1024 ** 2):
     # Create a new sha256 hash object
