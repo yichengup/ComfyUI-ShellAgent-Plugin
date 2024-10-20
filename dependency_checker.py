@@ -63,7 +63,7 @@ def inspect_repo_version(module_path):
             ['git', 'config', '--get', 'remote.origin.url'],
             cwd=module_path
         ).strip().decode()
-    except subprocess.CalledProcessError:
+    except Exception:
         return result
 
     # Get the latest commit hash
@@ -72,7 +72,7 @@ def inspect_repo_version(module_path):
             ['git', 'rev-parse', 'HEAD'],
             cwd=module_path
         ).strip().decode()
-    except subprocess.CalledProcessError:
+    except Exception:
         return result
 
     # Create and return the JSON result
