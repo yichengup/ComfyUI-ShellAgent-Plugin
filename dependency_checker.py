@@ -46,7 +46,7 @@ def handle_model_info(ckpt_path):
         
     item = {
         "filename": filename,
-        "save_path": save_path,
+        "save_path": os.path.relpath(save_path, BASE_PATH),
         "urls": urls,
     }
     return model_id, item
