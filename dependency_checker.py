@@ -151,7 +151,7 @@ def resolve_dependencies(prompt, custom_dependencies): # resolve custom nodes an
     custom_nodes_names = []
     for custom_node in custom_nodes:
         try:
-            repo_info = inspect_repo_version(custom_node.replace(".", "/"))
+            repo_info = inspect_repo_version(os.path.join(BASE_PATH, custom_node.replace(".", "/")))
             custom_nodes_list.append(repo_info)
             if repo_info["repo"] == "":
                 repo_info["require_recheck"] = True
