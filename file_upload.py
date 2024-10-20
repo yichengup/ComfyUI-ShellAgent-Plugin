@@ -3,6 +3,7 @@ import os
 import requests
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
+import folder_paths
 
 from .utils import compute_sha256
 
@@ -59,13 +60,16 @@ def upload_file_to_myshell(local_file: str) -> str:
  
  
 def collect_local_file(item, mapping_dict={}):
+    input_dir = folder_paths.get_input_directory()
     if not isinstance(item, str):
         return
+    abspath = os.path.abspath(item)
+    input_abspath = os.path.join(input_dir, item)
     # required file type
-    if os.path.isfile(item):
-        fpath = item
-    elif os.path.isfile(f"input/{item}"):
-        fpath = f"input/{item}"
+    if os.path.isfile(abspath):
+        fpath = abspath
+    elif os.path.isfile(input_abspath):
+        fpath = input_abspath
     else:
         fpath = None
     if fpath is not None:
