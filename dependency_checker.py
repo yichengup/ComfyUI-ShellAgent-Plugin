@@ -23,7 +23,7 @@ def handle_model_info(ckpt_path):
     ckpt_path = windows_to_linux_path(ckpt_path)
     filename = os.path.basename(ckpt_path)
     dirname = os.path.dirname(ckpt_path)
-    save_path = dirname.split('/', 1)[1]
+    save_path = os.path.dirname(os.path.relpath(ckpt_path, MODELS_DIR))
     metadata_path = ckpt_path + ".json"
     if os.path.isfile(metadata_path):
         metadata = json.load(open(metadata_path))
@@ -46,7 +46,7 @@ def handle_model_info(ckpt_path):
         
     item = {
         "filename": filename,
-        "save_path": os.path.relpath(save_path, BASE_PATH),
+        "save_path": save_path,
         "urls": urls,
     }
     return model_id, item
