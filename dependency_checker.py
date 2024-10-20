@@ -5,6 +5,8 @@ import logging
 from functools import partial
 import re
 import glob
+from folder_paths import models_dir as MODELS_DIR
+from folder_paths import base_path as BASE_PATH
 
 from .utils import compute_sha256, windows_to_linux_path
 from .file_upload import collect_local_file, process_local_file_path_async
@@ -115,7 +117,7 @@ def resolve_dependencies(prompt, custom_dependencies): # resolve custom nodes an
                 for item in model_loaders_info[node_class_type]:
                     pattern = item["field_name"]
                     if re.match(f"^{pattern}$", field_name):
-                        ckpt_path = os.path.join("models", item["save_path"], filename)
+                        ckpt_path = os.path.join(MODELS_DIR, item["save_path"], filename)
                         ckpt_paths.append(ckpt_path)
         else:
             for field_name, filename in node_info["inputs"].items():
@@ -130,7 +132,7 @@ def resolve_dependencies(prompt, custom_dependencies): # resolve custom nodes an
                     # find possible paths
                     matching_files = []
                     # Walk through all subdirectories and files in the directory
-                    for possible_filename in glob.glob("models/**/*", recursive=True):
+                    for possible_filename in glob.glob(os.path.join(MODELS_DIR, "**", "*"), recursive=True):
                         if os.path.isfile(possible_filename) and possible_filename.endswith(filename):
                             matching_files.append(possible_filename)
                     print(f"matched files: {matching_files}")
@@ -142,7 +144,7 @@ def resolve_dependencies(prompt, custom_dependencies): # resolve custom nodes an
     print("ckpt_paths:", ckpt_paths)
     custom_nodes = list(set(custom_nodes))
     # step 0: comfyui version
-    comfyui_version = inspect_repo_version("./")
+    comfyui_version = inspect_repo_version(BASE_PATH)
     
     # step 1: custom nodes
     custom_nodes_list = []
