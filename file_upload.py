@@ -46,7 +46,7 @@ def upload_file_to_myshell(local_file: str) -> str:
     start_time = time.time()
     ext = os.path.splitext(local_file)[1]
     files = [
-        ('file', (os.path.basename(local_file), open(local_file, 'rb'), ext_to_type[ext])),
+        ('file', (os.path.basename(local_file), open(local_file, 'rb'), ext_to_type[ext.lower()])),
     ]
     response = requests.request("POST", server_url, headers=headers, files=files)
     if response.status_code == 200:
@@ -74,7 +74,7 @@ def collect_local_file(item, mapping_dict={}):
         fpath = None
     if fpath is not None:
         ext = os.path.splitext(fpath)[1]
-        if ext in ext_to_type.keys():
+        if ext.lower() in ext_to_type.keys():
             mapping_dict[item] = fpath
             return
         else:
