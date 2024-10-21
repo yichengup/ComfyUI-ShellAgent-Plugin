@@ -144,8 +144,14 @@ def resolve_dependencies(prompt, custom_dependencies): # resolve custom nodes an
     print("ckpt_paths:", ckpt_paths)
     custom_nodes = list(set(custom_nodes))
     # step 0: comfyui version
-    comfyui_version = inspect_repo_version(BASE_PATH)
-    
+    repo_info = inspect_repo_version(BASE_PATH)
+    if repo_info["repo"] == "":
+        repo_info["require_recheck"] = True
+        if repo_info["name"] in custom_dependencies["custom_nodes"]:
+            repo_info["repo"] = custom_dependencies["custom_nodes"][repo_info["name"]].get("repo", "")
+            repo_info["commit"] = custom_dependencies["custom_nodes"][repo_info["name"]].get("commit", "")
+    comfyui_version = repo_info
+
     # step 1: custom nodes
     custom_nodes_list = []
     custom_nodes_names = []
