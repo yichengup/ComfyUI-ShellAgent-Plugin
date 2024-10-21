@@ -184,11 +184,9 @@ app.registerExtension({
                 callback: () => {
                   this.convertWidgetToInput(w);
                   const node = addNode("ShellAgentPluginInputText", this, { before: true });
-                  // if (nodeData.name === 'CLIPTextEncode') {
+                  const dvn = node.widgets.find(w => w.name === 'default_value')
+                  dvn.value = w.value;
                   node.connect(0, this, this.inputs.length - 1);
-                  // } else {
-                  //   window.alert('[ShellAgent] Unsupported quick operation.')
-                  // }
                 }
               })
             }
@@ -198,6 +196,8 @@ app.registerExtension({
                 callback: () => {
                   this.convertWidgetToInput(w);
                   const node = addNode("ShellAgentPluginInputInteger", this, { before: true });
+                  const dvn = node.widgets.find(w => w.name === 'default_value')
+                  dvn.value = w.value;
                   node.connect(0, this, this.inputs.length - 1);
                 }
               })
@@ -207,6 +207,8 @@ app.registerExtension({
                 callback: () => {
                   this.convertWidgetToInput(w);
                   const node = addNode("ShellAgentPluginInputFloat", this, { before: true });
+                  const dvn = node.widgets.find(w => w.name === 'default_value')
+                  dvn.value = w.value;
                   node.connect(0, this, this.inputs.length - 1);
                 }
               })
