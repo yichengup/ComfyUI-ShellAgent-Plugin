@@ -59,6 +59,10 @@ def inspect_repo_version(module_path):
         "repo": "",
         "commit": ""
     }
+    
+    if not os.path.isdir(os.path.join(module_path, ".git")):
+        return result
+    
     # Get the remote repository URL
     try:
         remote_url = subprocess.check_output(
