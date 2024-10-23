@@ -91,7 +91,7 @@ def inspect_repo_version(module_path):
 
 def fetch_model_searcher_results(model_ids):
     import requests
-    url = "https://shellagent.myshell.ai/models_searcher/search_urls"
+    url = "https://models-searcher.myshell.life/search_urls"
     headers = {
         "Content-Type": "application/json"
     }
