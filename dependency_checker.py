@@ -100,7 +100,10 @@ def fetch_model_searcher_results(model_ids):
     }
 
     response = requests.post(url, headers=headers, json=data)
-    results = [item[:10] for item in response.json()]
+    if response.status_code == 200:
+        results = [item[:10] for item in response.json()]
+    else:
+        results = None
     return results
 
 def resolve_dependencies(prompt, custom_dependencies): # resolve custom nodes and models at the same time
@@ -195,11 +198,12 @@ def resolve_dependencies(prompt, custom_dependencies): # resolve custom nodes an
             
     # try to fetch from myshell model searcher
     missing_model_results_myshell = fetch_model_searcher_results(missing_model_ids)
-    for missing_model_id, missing_model_urls in zip(missing_model_ids, missing_model_results_myshell):
-        if len(missing_model_urls) > 0:
-            models_dict[missing_model_id]["require_recheck"] = False
-            models_dict[missing_model_id]["urls"] = missing_model_urls
-            print("successfully fetch results from myshell", models_dict[missing_model_id])
+    if missing_model_results_myshell is not None:
+        for missing_model_id, missing_model_urls in zip(missing_model_ids, missing_model_results_myshell):
+            if len(missing_model_urls) > 0:
+                models_dict[missing_model_id]["require_recheck"] = False
+                models_dict[missing_model_id]["urls"] = missing_model_urls
+                print("successfully fetch results from myshell", models_dict[missing_model_id])
 
     # step 3: handle local files
     process_local_file_path_async(file_mapping_dict, max_workers=20)
