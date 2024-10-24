@@ -93,7 +93,7 @@ app.registerExtension({
             try {
               arr = JSON.parse(widget.value)
             } catch { }
-          } else if(Array.isArray(widget.value)) {
+          } else if (Array.isArray(widget.value)) {
             arr = widget.value
           }
 
@@ -191,25 +191,32 @@ app.registerExtension({
               })
             }
             if (["number"].indexOf(w.type) > -1) {
-              toInput.push({
-                content: `${w.name} <- Input Interger`,
-                callback: () => {
-                  this.convertWidgetToInput(w);
-                  const node = addNode("ShellAgentPluginInputInteger", this, { before: true });
-                  const dvn = node.widgets.find(w => w.name === 'default_value')
-                  dvn.value = w.value;
-                  node.connect(0, this, this.inputs.length - 1);
-                }
-              })
 
               toInput.push({
-                content: `${w.name} <- Input Float`,
-                callback: () => {
-                  this.convertWidgetToInput(w);
-                  const node = addNode("ShellAgentPluginInputFloat", this, { before: true });
-                  const dvn = node.widgets.find(w => w.name === 'default_value')
-                  dvn.value = w.value;
-                  node.connect(0, this, this.inputs.length - 1);
+                content: w.name,
+                submenu: {
+                  options: [
+                    {
+                      content: 'Input Interger',
+                      callback: () => {
+                        this.convertWidgetToInput(w);
+                        const node = addNode("ShellAgentPluginInputInteger", this, { before: true });
+                        const dvn = node.widgets.find(w => w.name === 'default_value')
+                        dvn.value = w.value;
+                        node.connect(0, this, this.inputs.length - 1);
+                      }
+                    },
+                    {
+                      content: 'Input Float',
+                      callback: () => {
+                        this.convertWidgetToInput(w);
+                        const node = addNode("ShellAgentPluginInputFloat", this, { before: true });
+                        const dvn = node.widgets.find(w => w.name === 'default_value')
+                        dvn.value = w.value;
+                        node.connect(0, this, this.inputs.length - 1);
+                      }
+                    }
+                  ]
                 }
               })
             }
