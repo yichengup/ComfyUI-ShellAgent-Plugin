@@ -159,9 +159,17 @@ async def shellagent_export(request):
         #     with open(os.path.join(save_root, fname), "w") as f:
         #         json.dump(dict_to_save, f, indent=2)
         
+        if dependency_results.get("black_list_nodes", []):
+            warning_message = "The following nodes cannot be deployed to myshell:\n"
+            for item in dependency_results["black_list_nodes"]:
+                warning_message += f"  {item['name']}: {item['reason']}\n"
+        else:
+            warning_message = ""
+        
         return_dict = {
             "success": True,
-            "dependencies": dependency_results,
+            "dependencies": dependency_results["dependencies"],
+            "warning_message": warning_message,
             "schemas": schemas
         }
     except Exception as e:

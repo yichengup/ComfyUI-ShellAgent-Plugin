@@ -91,7 +91,7 @@ def inspect_repo_version(module_path):
 
 def fetch_model_searcher_results(model_ids):
     import requests
-    url = "https://shellagent.myshell.ai/models_searcher/search_urls"
+    url = "https://models-searcher.myshell.life/search_urls"
     headers = {
         "Content-Type": "application/json"
     }
@@ -145,12 +145,12 @@ def resolve_dependencies(prompt, custom_dependencies): # resolve custom nodes an
                     matching_files = []
                     # Walk through all subdirectories and files in the directory
                     for possible_folder_name in folder_paths.folder_names_and_paths:
-                        full_path = folder_paths.get_full_path(possible_folder_name)
+                        full_path = folder_paths.get_full_path(possible_folder_name, filename)
                         if full_path is None:
                             continue
                         matching_files.append(full_path)
                     print(f"matched files: {matching_files}")
-                    if len(matching_files) == 1:
+                    if len(set(matching_files)) == 1:
                         ckpt_paths.append(matching_files[0])
         list(map(partial(collect_local_file, mapping_dict=file_mapping_dict), node_info["inputs"].values()))
             
