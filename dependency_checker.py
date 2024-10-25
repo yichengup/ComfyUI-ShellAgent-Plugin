@@ -15,7 +15,7 @@ from .file_upload import collect_local_file, process_local_file_path_async
 model_list_json = json.load(open(os.path.join(os.path.dirname(__file__), "model_info.json")))
 model_loaders_info = json.load(open(os.path.join(os.path.dirname(__file__), "model_loader_info.json")))
 node_deps_info = json.load(open(os.path.join(os.path.dirname(__file__), "node_deps_info.json")))
-
+node_blacklist = json.load(open(os.path.join(os.path.dirname(__file__), "node_blacklist.json")))
 
 model_suffix = [".ckpt", ".safetensors", ".bin", ".pth", ".pt", ".onnx"]
 
@@ -108,6 +108,8 @@ def fetch_model_searcher_results(model_ids):
 
 def resolve_dependencies(prompt, custom_dependencies): # resolve custom nodes and models at the same time
     from nodes import NODE_CLASS_MAPPINGS
+    import folder_paths
+    
     custom_nodes = []
     ckpt_paths = []
     
@@ -122,10 +124,12 @@ def resolve_dependencies(prompt, custom_dependencies): # resolve custom nodes an
             custom_nodes.append(node_cls.RELATIVE_PYTHON_MODULE)
         if node_class_type in model_loaders_info:
             for field_name, filename in node_info["inputs"].items():
+                if type(filename) != str:
+                    continue
                 for item in model_loaders_info[node_class_type]:
                     pattern = item["field_name"]
-                    if re.match(f"^{pattern}$", field_name):
-                        ckpt_path = os.path.join(MODELS_DIR, item["save_path"], filename)
+                    if re.match(f"^{pattern}$", field_name) and any([filename.endswith(possible_suffix) for possible_suffix in model_suffix]):
+                        ckpt_path = folder_paths.get_full_path_or_raise(item["save_path"], filename)
                         ckpt_paths.append(ckpt_path)
         else:
             for field_name, filename in node_info["inputs"].items():
@@ -140,9 +144,11 @@ def resolve_dependencies(prompt, custom_dependencies): # resolve custom nodes an
                     # find possible paths
                     matching_files = []
                     # Walk through all subdirectories and files in the directory
-                    for possible_filename in glob.glob(os.path.join(MODELS_DIR, "**", "*"), recursive=True):
-                        if os.path.isfile(possible_filename) and possible_filename.endswith(filename):
-                            matching_files.append(possible_filename)
+                    for possible_folder_name in folder_paths.folder_names_and_paths:
+                        full_path = folder_paths.get_full_path(possible_folder_name)
+                        if full_path is None:
+                            continue
+                        matching_files.append(full_path)
                     print(f"matched files: {matching_files}")
                     if len(matching_files) == 1:
                         ckpt_paths.append(matching_files[0])
@@ -183,6 +189,12 @@ def resolve_dependencies(prompt, custom_dependencies): # resolve custom nodes an
                     repo_info = inspect_repo_version(os.path.join("custom_nodes", deps_node["name"]))
                     deps_node["commit"] = repo_info["commit"]
                     custom_nodes_list.append(deps_node)
+                    custom_nodes_names.append(deps_node["name"])
+                    
+    black_list_nodes = []
+    for repo_name in custom_nodes_names:
+        if repo_name in node_blacklist:
+            black_list_nodes.append({"name": repo_name, "reason": node_blacklist[repo_name]["reason"]})
     
     # step 2: models
     models_dict = {}
@@ -209,10 +221,14 @@ def resolve_dependencies(prompt, custom_dependencies): # resolve custom nodes an
     process_local_file_path_async(file_mapping_dict, max_workers=20)
     files_dict = {v[0]: {"filename": windows_to_linux_path(os.path.relpath(v[2], BASE_PATH)), "urls": [v[1]]} for v in file_mapping_dict.values()}
     
-    results = {
+    depencencies = {
         "comfyui_version": comfyui_version,
         "custom_nodes": custom_nodes_list,
         "models": models_dict,
         "files": files_dict,
     }
-    return results
+    return_dict = {
+        "dependencies": depencencies,
+        "black_list_nodes": black_list_nodes,
+    }
+    return return_dict
