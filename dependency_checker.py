@@ -19,11 +19,8 @@ node_blacklist = json.load(open(os.path.join(os.path.dirname(__file__), "node_bl
 
 model_suffix = [".ckpt", ".safetensors", ".bin", ".pth", ".pt", ".onnx"]
 
-def handle_model_info(ckpt_path):
+def handle_model_info(ckpt_path, filename, rel_save_path):
     ckpt_path = windows_to_linux_path(ckpt_path)
-    filename = os.path.basename(ckpt_path)
-    dirname = os.path.dirname(ckpt_path)
-    save_path = os.path.dirname(os.path.relpath(ckpt_path, MODELS_DIR))
     metadata_path = ckpt_path + ".json"
     if os.path.isfile(metadata_path):
         metadata = json.load(open(metadata_path))
@@ -35,7 +32,7 @@ def handle_model_info(ckpt_path):
         model_id = compute_sha256(ckpt_path)
         data = {
             "id": model_id,
-            "save_path": save_path,
+            "save_path": rel_save_path,
             "filename": filename,
         }
         json.dump(data, open(metadata_path, "w"))
@@ -46,7 +43,7 @@ def handle_model_info(ckpt_path):
         
     item = {
         "filename": filename,
-        "save_path": windows_to_linux_path(save_path),
+        "save_path": windows_to_linux_path(rel_save_path),
         "urls": urls,
     }
     return model_id, item
@@ -111,7 +108,7 @@ def resolve_dependencies(prompt, custom_dependencies): # resolve custom nodes an
     import folder_paths
     
     custom_nodes = []
-    ckpt_paths = []
+    ckpt_paths = {}
     
     file_mapping_dict = {}
     for node_id, node_info in prompt.items():
@@ -130,7 +127,11 @@ def resolve_dependencies(prompt, custom_dependencies): # resolve custom nodes an
                     pattern = item["field_name"]
                     if re.match(f"^{pattern}$", field_name) and any([filename.endswith(possible_suffix) for possible_suffix in model_suffix]):
                         ckpt_path = folder_paths.get_full_path_or_raise(item["save_path"], filename)
-                        ckpt_paths.append(ckpt_path)
+                        rel_save_path = os.path.relpath(folder_paths.folder_names_and_paths[item["save_path"]][0][0], folder_paths.models_dir)
+                        ckpt_paths[ckpt_path] = {
+                            "filename": filename,
+                            "rel_save_path": rel_save_path
+                        }
         else:
             for field_name, filename in node_info["inputs"].items():
                 if type(filename) != str:
@@ -144,17 +145,23 @@ def resolve_dependencies(prompt, custom_dependencies): # resolve custom nodes an
                     # find possible paths
                     matching_files = []
                     # Walk through all subdirectories and files in the directory
+                    rel_save_path = None
                     for possible_folder_name in folder_paths.folder_names_and_paths:
                         full_path = folder_paths.get_full_path(possible_folder_name, filename)
                         if full_path is None:
                             continue
+                        rel_save_path = os.path.relpath(folder_paths.folder_names_and_paths[possible_folder_name][0][0], folder_paths.models_dir)
                         matching_files.append(full_path)
+                        break
                     print(f"matched files: {matching_files}")
                     if len(set(matching_files)) == 1:
-                        ckpt_paths.append(matching_files[0])
+                        assert rel_save_path is not None
+                        ckpt_paths[matching_files[0]] = {
+                            "filename": filename,
+                            "rel_save_path": rel_save_path
+                        }
         list(map(partial(collect_local_file, mapping_dict=file_mapping_dict), node_info["inputs"].values()))
             
-    ckpt_paths = list(set(ckpt_paths))
     print("ckpt_paths:", ckpt_paths)
     custom_nodes = list(set(custom_nodes))
     # step 0: comfyui version
@@ -199,8 +206,8 @@ def resolve_dependencies(prompt, custom_dependencies): # resolve custom nodes an
     # step 2: models
     models_dict = {}
     missing_model_ids = []
-    for ckpt_path in ckpt_paths:
-        model_id, item = handle_model_info(ckpt_path)
+    for ckpt_path, ckpt_info in ckpt_paths.items():
+        model_id, item = handle_model_info(ckpt_path, ckpt_info["filename"], ckpt_info["rel_save_path"])
         models_dict[model_id] = item
         if len(item["urls"]) == 0:
             item["require_recheck"] = True
