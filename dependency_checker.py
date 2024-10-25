@@ -7,6 +7,7 @@ import re
 import glob
 from folder_paths import models_dir as MODELS_DIR
 from folder_paths import base_path as BASE_PATH
+from folder_paths import get_full_path
 
 from .utils import compute_sha256, windows_to_linux_path
 from .file_upload import collect_local_file, process_local_file_path_async
@@ -18,6 +19,14 @@ node_deps_info = json.load(open(os.path.join(os.path.dirname(__file__), "node_de
 node_blacklist = json.load(open(os.path.join(os.path.dirname(__file__), "node_blacklist.json")))
 
 model_suffix = [".ckpt", ".safetensors", ".bin", ".pth", ".pt", ".onnx"]
+
+
+def get_full_path_or_raise(folder_name: str, filename: str) -> str:
+    full_path = get_full_path(folder_name, filename)
+    if full_path is None:
+        raise FileNotFoundError(f"Model in folder '{folder_name}' with filename '{filename}' not found.")
+    return full_path
+
 
 def handle_model_info(ckpt_path, filename, rel_save_path):
     ckpt_path = windows_to_linux_path(ckpt_path)
@@ -126,7 +135,7 @@ def resolve_dependencies(prompt, custom_dependencies): # resolve custom nodes an
                 for item in model_loaders_info[node_class_type]:
                     pattern = item["field_name"]
                     if re.match(f"^{pattern}$", field_name) and any([filename.endswith(possible_suffix) for possible_suffix in model_suffix]):
-                        ckpt_path = folder_paths.get_full_path_or_raise(item["save_path"], filename)
+                        ckpt_path = get_full_path_or_raise(item["save_path"], filename)
                         rel_save_path = os.path.relpath(folder_paths.folder_names_and_paths[item["save_path"]][0][0], folder_paths.models_dir)
                         ckpt_paths[ckpt_path] = {
                             "filename": filename,
