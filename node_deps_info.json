@@ -15,5 +15,12 @@
         "repo": "https://github.com/shiimizu/ComfyUI_smZNodes.git",
         "commit": ""
       }
+  ],
+  "efficiency-nodes-comfyui": [
+    {
+      "name": "comfyui_controlnet_aux",
+      "repo": "https://github.com/Fannovel16/comfyui_controlnet_aux.git",
+      "commit": ""
+    }
   ]
 }
