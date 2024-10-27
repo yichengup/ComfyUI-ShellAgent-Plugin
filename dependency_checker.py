@@ -18,7 +18,7 @@ model_loaders_info = json.load(open(os.path.join(os.path.dirname(__file__), "mod
 node_deps_info = json.load(open(os.path.join(os.path.dirname(__file__), "node_deps_info.json")))
 node_blacklist = json.load(open(os.path.join(os.path.dirname(__file__), "node_blacklist.json")))
 
-model_suffix = [".ckpt", ".safetensors", ".bin", ".pth", ".pt", ".onnx"]
+model_suffix = [".ckpt", ".safetensors", ".bin", ".pth", ".pt", ".onnx", ".gguf"]
 
 
 def get_full_path_or_raise(folder_name: str, filename: str) -> str:
@@ -136,7 +136,11 @@ def resolve_dependencies(prompt, custom_dependencies): # resolve custom nodes an
                     pattern = item["field_name"]
                     if re.match(f"^{pattern}$", field_name) and any([filename.endswith(possible_suffix) for possible_suffix in model_suffix]):
                         ckpt_path = get_full_path_or_raise(item["save_path"], filename)
-                        rel_save_path = os.path.relpath(folder_paths.folder_names_and_paths[item["save_path"]][0][0], folder_paths.models_dir)
+                        if hasattr(folder_paths, "map_legacy"):
+                            save_folder = folder_paths.map_legacy(item["save_path"])
+                        else:
+                            save_folder = item["save_path"]
+                        rel_save_path = os.path.relpath(folder_paths.folder_names_and_paths[save_folder][0][0], folder_paths.models_dir)
                         ckpt_paths[ckpt_path] = {
                             "filename": filename,
                             "rel_save_path": rel_save_path
