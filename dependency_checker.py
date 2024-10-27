@@ -206,7 +206,7 @@ def resolve_dependencies(prompt, custom_dependencies): # resolve custom nodes an
         if repo_name in node_deps_info:
             for deps_node in node_deps_info[repo_name]:
                 if deps_node["name"] not in custom_nodes_names:
-                    repo_info = inspect_repo_version(os.path.join("custom_nodes", deps_node["name"]))
+                    repo_info = inspect_repo_version(os.path.join(BASE_PATH, "custom_nodes", deps_node["name"]))
                     deps_node["commit"] = repo_info["commit"]
                     custom_nodes_list.append(deps_node)
                     custom_nodes_names.append(deps_node["name"])
