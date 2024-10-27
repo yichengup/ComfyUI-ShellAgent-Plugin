@@ -174,22 +174,10 @@ app.registerExtension({
 
     if (nodeData.name.indexOf('ShellAgentPlugin') === -1) {
       addMenuHandler(nodeType, function (_, options) {
+
         if (this.widgets) {
           let toInput = [];
           for (const w of this.widgets) {
-            // todo: combo need to remove and convert back
-            // if (w.type === 'combo' && w.name === 'image') {
-            //   toInput.push({
-            //     content: `${w.name} <- Input Image`,
-            //     callback: () => {
-            //       this.convertWidgetToInput(w);
-            //       const node = addNode("ShellAgentPluginInputImage", this, { before: true });
-            //       const dvn = node.widgets.find(w => w.name === 'default_value')
-            //       dvn.value = w.value;
-            //       node.connect(0, this, 0);
-            //     }
-            //   })
-            // }
             if (["customtext"].indexOf(w.type) > -1) {
               toInput.push({
                 content: w.name,
