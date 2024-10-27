@@ -18,7 +18,7 @@ model_loaders_info = json.load(open(os.path.join(os.path.dirname(__file__), "mod
 node_deps_info = json.load(open(os.path.join(os.path.dirname(__file__), "node_deps_info.json")))
 node_blacklist = json.load(open(os.path.join(os.path.dirname(__file__), "node_blacklist.json")))
 
-model_suffix = [".ckpt", ".safetensors", ".bin", ".pth", ".pt", ".onnx"]
+model_suffix = [".ckpt", ".safetensors", ".bin", ".pth", ".pt", ".onnx", ".gguf"]
 
 
 def get_full_path_or_raise(folder_name: str, filename: str) -> str:
