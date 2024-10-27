@@ -279,14 +279,37 @@ app.registerExtension({
 
             if (o.type === 'STRING') {
               toOutput.push({
-                content: `${o.name} -> Output Text`,
-                callback: () => {
-                  const node = addNode("ShellAgentPluginOutputText", this);
-                  this.connect(0, node, 0);
+                content: o.name,
+                submenu: {
+                  options: [
+                    {
+                      content: `Output Text`,
+                      callback: () => {
+                        const node = addNode("ShellAgentPluginOutputText", this);
+                        this.connect(0, node, 0);
+                      }
+                    }
+                  ]
                 }
               })
             }
 
+            if (o.type === "VHS_FILENAMES") {
+              toOutput.push({
+                content: o.name,
+                submenu: {
+                  options: [
+                    {
+                      content: `Save Video - VHS`,
+                      callback: () => {
+                        const node = addNode("ShellAgentPluginSaveVideoVHS", this);
+                        this.connect(0, node, 0);
+                      }
+                    }
+                  ]
+                }
+              })
+            }
           }
 
           if (toOutput.length) {
