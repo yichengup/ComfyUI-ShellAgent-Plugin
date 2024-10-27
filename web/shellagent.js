@@ -313,6 +313,12 @@ app.registerExtension({
       })
     }
   },
+
+  afterConfigureGraph(missingNodeTypes, app) {
+    const type = 'IMAGE'
+    const nodeId = 'ShellAgentPluginInputImage'
+    LiteGraph.slot_types_default_in[type].unshift(nodeId)
+  }
 });
 
 function addMenuHandler(nodeType, cb) {
