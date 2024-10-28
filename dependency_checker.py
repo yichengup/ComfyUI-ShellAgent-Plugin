@@ -5,9 +5,11 @@ import logging
 from functools import partial
 import re
 import glob
+import pkg_resources
 from folder_paths import models_dir as MODELS_DIR
 from folder_paths import base_path as BASE_PATH
 from folder_paths import get_full_path
+
 
 from .utils import compute_sha256, windows_to_linux_path
 from .file_upload import collect_local_file, process_local_file_path_async
@@ -19,6 +21,7 @@ node_deps_info = json.load(open(os.path.join(os.path.dirname(__file__), "node_de
 node_blacklist = json.load(open(os.path.join(os.path.dirname(__file__), "node_blacklist.json")))
 
 model_suffix = [".ckpt", ".safetensors", ".bin", ".pth", ".pt", ".onnx", ".gguf"]
+
 
 
 def get_full_path_or_raise(folder_name: str, filename: str) -> str:
@@ -112,6 +115,23 @@ def fetch_model_searcher_results(model_ids):
         results = None
     return results
 
+def split_package_version(require_line):
+    require_line = require_line.strip()
+    
+    pattern = r"^([a-zA-Z0-9_\-\[\]]+)(.*)$"
+    match = re.match(pattern, require_line.strip())
+    
+    if match:
+        package_name = match.group(1)  # First capturing group is the package name
+        version_specifier = match.group(2) if match.group(2) else ""  # Second group is the version, if present
+        return package_name, version_specifier
+    else:
+        assert len(require_line) == 0 or require_line.strip()[0] == "#", require_line
+        return None, None
+
+def get_package_version(package_name):
+    return pkg_resources.get_distribution(package_name).version
+    
 def resolve_dependencies(prompt, custom_dependencies): # resolve custom nodes and models at the same time
     from nodes import NODE_CLASS_MAPPINGS
     import folder_paths
@@ -189,6 +209,7 @@ def resolve_dependencies(prompt, custom_dependencies): # resolve custom nodes an
     # step 1: custom nodes
     custom_nodes_list = []
     custom_nodes_names = []
+    requirements_lines = []
     for custom_node in custom_nodes:
         try:
             repo_info = inspect_repo_version(os.path.join(BASE_PATH, custom_node.replace(".", "/")))
@@ -201,6 +222,15 @@ def resolve_dependencies(prompt, custom_dependencies): # resolve custom nodes an
             custom_nodes_names.append(repo_info["name"])
         except:
             print(f"failed to resolve repo info of {custom_node}")
+        requirement_file = os.path.join(BASE_PATH, custom_node.replace(".", "/"), "requirements.txt")
+        if os.path.isfile(requirement_file):
+            requirements_lines += open(requirement_file).readlines()
+    requirements_lines = list(set(requirements_lines))
+    requirements_packages = [package_name for package_name, version_specifier in map(split_package_version, requirements_lines) if package_name is not None]
+    pypi_deps = {
+        package_name: get_package_version(package_name)
+        for package_name in requirements_packages
+    }
     
     for repo_name in custom_nodes_names:
         if repo_name in node_deps_info:
@@ -246,7 +276,9 @@ def resolve_dependencies(prompt, custom_dependencies): # resolve custom nodes an
         "custom_nodes": custom_nodes_list,
         "models": models_dict,
         "files": files_dict,
+        "pypi": pypi_deps
     }
+    
     return_dict = {
         "dependencies": depencencies,
         "black_list_nodes": black_list_nodes,
