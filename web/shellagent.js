@@ -37,11 +37,15 @@ app.registerExtension({
     });
   },
   async beforeRegisterNodeDef(nodeType, nodeData, app) {
+    if (["ShellAgentPluginOutputText", "ShellAgentPluginOutputFloat", "ShellAgentPluginOutputInteger"].indexOf(nodeData.name) > -1) {
+      chainCallback(nodeType.prototype, "onNodeCreated", function () {
+        this.convertWidgetToInput(this.widgets[0])
+      })
+    }
 
     if (["ShellAgentPluginInputText", "ShellAgentPluginInputFloat", "ShellAgentPluginInputInteger"].indexOf(nodeData.name) > -1) {
       chainCallback(nodeType.prototype, "onNodeCreated", function () {
         const widget = this.widgets.find(w => w.name === 'choices')
-
         this.addWidget('button', 'manage choices', null, () => {
           const container = document.createElement("div");
           Object.assign(container.style, {
@@ -318,6 +322,10 @@ app.registerExtension({
     LiteGraph.slot_types_default_in['IMAGE'].unshift('ShellAgentPluginInputImage')
     LiteGraph.slot_types_default_out['IMAGE'].unshift('ShellAgentPluginSaveImage')
     LiteGraph.slot_types_default_out['IMAGE'].unshift('ShellAgentPluginSaveImages')
+
+    LiteGraph.slot_types_default_out['STRING'].unshift('ShellAgentPluginOutputFloat')
+    LiteGraph.slot_types_default_out['STRING'].unshift('ShellAgentPluginOutputInteger')
+    LiteGraph.slot_types_default_out['STRING'].unshift('ShellAgentPluginOutputText')
   }
 });
 
