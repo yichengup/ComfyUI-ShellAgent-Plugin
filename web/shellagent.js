@@ -141,6 +141,22 @@ app.registerExtension({
       })
     }
 
+    if (['LoadImage', 'LoadImageMask'].indexOf(nodeData.name) > -1) {
+      addMenuHandler(nodeType, function (_, options) {
+        options.unshift({
+          content: "Replace with ShellAgent Input Image",
+          callback: () => {
+            const node = addNode("ShellAgentPluginInputImage", this, { before: true });
+            app.graph.links.filter(l => l != null)
+              .forEach(l => {
+                const tn = app.graph._nodes_by_id[l.target_id]
+                node.connect(0, tn, 0)
+              })
+          }
+        })
+      })
+    }
+
     if (nodeData.name === "ShellAgentPluginInputImage") {
       if (
         nodeData?.input?.required?.default_value?.[1]?.image_upload === true
@@ -155,7 +171,6 @@ app.registerExtension({
     if (nodeData.name === "ShellAgentPluginInputVideo") {
       addUploadWidget(nodeType, nodeData, "default_value");
       chainCallback(nodeType.prototype, "onNodeCreated", function () {
-        // const pathWidget = this.widgets.find((w) => w.name === "video");
         const pathWidget = this.widgets.find((w) => w.name === "default_value");
         chainCallback(pathWidget, "callback", (value) => {
           if (!value) {
