@@ -335,13 +335,24 @@ app.registerExtension({
   },
 
   afterConfigureGraph(missingNodeTypes, app) {
-    LiteGraph.slot_types_default_in['IMAGE'].unshift('ShellAgentPluginInputImage')
-    LiteGraph.slot_types_default_out['IMAGE'].unshift('ShellAgentPluginSaveImage')
-    LiteGraph.slot_types_default_out['IMAGE'].unshift('ShellAgentPluginSaveImages')
+    function addIn(type, nodeId) {
+      if (LiteGraph.slot_types_default_in[type].indexOf(nodeId) === -1) {
+        LiteGraph.slot_types_default_in[type].unshift(nodeId)
+      }
+    }
 
-    LiteGraph.slot_types_default_out['STRING'].unshift('ShellAgentPluginOutputFloat')
-    LiteGraph.slot_types_default_out['STRING'].unshift('ShellAgentPluginOutputInteger')
-    LiteGraph.slot_types_default_out['STRING'].unshift('ShellAgentPluginOutputText')
+    function addOut(type, nodeId) {
+      if (LiteGraph.slot_types_default_out[type].indexOf(nodeId) === -1) {
+        LiteGraph.slot_types_default_out[type].unshift(nodeId)
+      }
+    }
+
+    addIn('IMAGE', 'ShellAgentPluginInputImage')
+    addOut('IMAGE', 'ShellAgentPluginSaveImage')
+    addOut('IMAGE', 'ShellAgentPluginSaveImages')
+    addOut('STRING', 'ShellAgentPluginOutputFloat')
+    addOut('STRING', 'ShellAgentPluginOutputInteger')
+    addOut('STRING', 'ShellAgentPluginOutputText')
   }
 });
 
