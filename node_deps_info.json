@@ -22,5 +22,12 @@
       "repo": "https://github.com/Fannovel16/comfyui_controlnet_aux.git",
       "commit": ""
     }
+  ],
+  "ComfyUI-Anyline": [
+    {
+      "name": "comfyui_controlnet_aux",
+      "repo": "https://github.com/Fannovel16/comfyui_controlnet_aux.git",
+      "commit": ""
+    }
   ]
 }
