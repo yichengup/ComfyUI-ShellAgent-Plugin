@@ -152,6 +152,7 @@ app.registerExtension({
                 const tn = app.graph._nodes_by_id[l.target_id]
                 node.connect(0, tn, 0)
               })
+            app.graph.remove(this);
           }
         })
       })
