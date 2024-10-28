@@ -302,7 +302,7 @@ app.registerExtension({
 
           if (toOutput.length) {
             options.unshift({
-              content: "Convert to ShellAgent (Output)",
+              content: "Connect to ShellAgent (Output)",
               submenu: {
                 options: toOutput
               }
@@ -315,9 +315,9 @@ app.registerExtension({
   },
 
   afterConfigureGraph(missingNodeTypes, app) {
-    const type = 'IMAGE'
-    const nodeId = 'ShellAgentPluginInputImage'
-    LiteGraph.slot_types_default_in[type].unshift(nodeId)
+    LiteGraph.slot_types_default_in['IMAGE'].unshift('ShellAgentPluginInputImage')
+    LiteGraph.slot_types_default_out['IMAGE'].unshift('ShellAgentPluginSaveImage')
+    LiteGraph.slot_types_default_out['IMAGE'].unshift('ShellAgentPluginSaveImages')
   }
 });
 
