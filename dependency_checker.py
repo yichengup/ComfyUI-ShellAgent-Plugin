@@ -5,7 +5,7 @@ import logging
 from functools import partial
 import re
 import glob
-import pkg_resources
+import sys
 from folder_paths import models_dir as MODELS_DIR
 from folder_paths import base_path as BASE_PATH
 from folder_paths import get_full_path
@@ -21,7 +21,7 @@ node_deps_info = json.load(open(os.path.join(os.path.dirname(__file__), "node_de
 node_blacklist = json.load(open(os.path.join(os.path.dirname(__file__), "node_blacklist.json")))
 
 model_suffix = [".ckpt", ".safetensors", ".bin", ".pth", ".pt", ".onnx", ".gguf"]
-
+extra_packages = ["transformers", "timm", "diffusers", "accelerate"]
 
 
 def get_full_path_or_raise(folder_name: str, filename: str) -> str:
@@ -130,7 +130,15 @@ def split_package_version(require_line):
         return None, None
 
 def get_package_version(package_name):
-    return pkg_resources.get_distribution(package_name).version
+    try:
+        if sys.version_info >= (3, 8):
+            from importlib.metadata import version, PackageNotFoundError
+            return version(package_name)
+        else:
+            from pkg_resources import get_distribution, DistributionNotFound
+            return get_distribution(package_name).version
+    except Exception:
+        return None
     
 def resolve_dependencies(prompt, custom_dependencies): # resolve custom nodes and models at the same time
     from nodes import NODE_CLASS_MAPPINGS
@@ -227,9 +235,10 @@ def resolve_dependencies(prompt, custom_dependencies): # resolve custom nodes an
             requirements_lines += open(requirement_file).readlines()
     requirements_lines = list(set(requirements_lines))
     requirements_packages = [package_name for package_name, version_specifier in map(split_package_version, requirements_lines) if package_name is not None]
+    package_names = set(requirements_packages + extra_packages)
     pypi_deps = {
         package_name: get_package_version(package_name)
-        for package_name in requirements_packages
+        for package_name in package_names
     }
     
     for repo_name in custom_nodes_names:
