@@ -95,7 +95,8 @@ def process_local_file_path_async(mapping_dict, max_workers=10):
                 result = future.result()
                 mapping_dict[filename] = result
             except Exception as e:
-                print(f"Error processing {filename}: {e}")
+                del mapping_dict[filename]
+                raise NotImplementedError(f"Error processing {filename}: {e}")
     end_time = time.time()
     logging.info(f"upload end, elapsed time: {end_time - start_time}")
     return
