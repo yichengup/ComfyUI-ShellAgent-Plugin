@@ -296,6 +296,20 @@ app.registerExtension({
                         const node = addNode("ShellAgentPluginOutputText", this);
                         this.connect(0, node, 0);
                       }
+                    },
+                    {
+                      content: `Output Float`,
+                      callback: () => {
+                        const node = addNode("ShellAgentPluginOutputFloat", this);
+                        this.connect(0, node, 0);
+                      }
+                    },
+                    {
+                      content: `Output Integer`,
+                      callback: () => {
+                        const node = addNode("ShellAgentPluginOutputInteger", this);
+                        this.connect(0, node, 0);
+                      }
                     }
                   ]
                 }
@@ -350,8 +364,8 @@ app.registerExtension({
     addIn('IMAGE', 'ShellAgentPluginInputImage')
     addOut('IMAGE', 'ShellAgentPluginSaveImage')
     addOut('IMAGE', 'ShellAgentPluginSaveImages')
-    addOut('STRING', 'ShellAgentPluginOutputFloat')
     addOut('STRING', 'ShellAgentPluginOutputInteger')
+    addOut('STRING', 'ShellAgentPluginOutputFloat')
     addOut('STRING', 'ShellAgentPluginOutputText')
   }
 });
