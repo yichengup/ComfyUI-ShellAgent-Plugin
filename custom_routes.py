@@ -158,13 +158,14 @@ async def shellagent_export(request):
         # for fname, dict_to_save in fname_mapping.items():
         #     with open(os.path.join(save_root, fname), "w") as f:
         #         json.dump(dict_to_save, f, indent=2)
-        
+        warning_message = ""
         if dependency_results.get("black_list_nodes", []):
             warning_message = "The following nodes cannot be deployed to myshell:\n"
             for item in dependency_results["black_list_nodes"]:
                 warning_message += f"  {item['name']}: {item['reason']}\n"
-        else:
-            warning_message = ""
+                
+        if len(schemas["inputs"]) + len(schemas["outputs"]) == 0:
+            warning_message += f"The workflow contains neither inputs nor outputs!\n"
         
         return_dict = {
             "success": True,
