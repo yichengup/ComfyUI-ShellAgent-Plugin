@@ -37,11 +37,15 @@ app.registerExtension({
     });
   },
   async beforeRegisterNodeDef(nodeType, nodeData, app) {
+    if (["ShellAgentPluginOutputText", "ShellAgentPluginOutputFloat", "ShellAgentPluginOutputInteger"].indexOf(nodeData.name) > -1) {
+      chainCallback(nodeType.prototype, "onNodeCreated", function () {
+        this.convertWidgetToInput(this.widgets[0])
+      })
+    }
 
     if (["ShellAgentPluginInputText", "ShellAgentPluginInputFloat", "ShellAgentPluginInputInteger"].indexOf(nodeData.name) > -1) {
       chainCallback(nodeType.prototype, "onNodeCreated", function () {
         const widget = this.widgets.find(w => w.name === 'choices')
-
         this.addWidget('button', 'manage choices', null, () => {
           const container = document.createElement("div");
           Object.assign(container.style, {
@@ -93,7 +97,7 @@ app.registerExtension({
             try {
               arr = JSON.parse(widget.value)
             } catch { }
-          } else if(Array.isArray(widget.value)) {
+          } else if (Array.isArray(widget.value)) {
             arr = widget.value
           }
 
@@ -137,6 +141,27 @@ app.registerExtension({
       })
     }
 
+    if (['LoadImage', 'LoadImageMask'].indexOf(nodeData.name) > -1) {
+      addMenuHandler(nodeType, function (_, options) {
+        options.unshift({
+          content: "Replace with ShellAgent Input Image",
+          callback: () => {
+            const node = addNode("ShellAgentPluginInputImage", this, { before: true });
+
+            const dvn = node.widgets.find(w => w.name === 'default_value')
+            dvn.value = this.widgets.find(w => w.name === 'image')?.value
+
+            app.graph.links.filter(l => l != null)
+              .forEach(l => {
+                const tn = app.graph._nodes_by_id[l.target_id]
+                node.connect(0, tn, 0)
+              })
+            app.graph.remove(this);
+          }
+        })
+      })
+    }
+
     if (nodeData.name === "ShellAgentPluginInputImage") {
       if (
         nodeData?.input?.required?.default_value?.[1]?.image_upload === true
@@ -151,7 +176,6 @@ app.registerExtension({
     if (nodeData.name === "ShellAgentPluginInputVideo") {
       addUploadWidget(nodeType, nodeData, "default_value");
       chainCallback(nodeType.prototype, "onNodeCreated", function () {
-        // const pathWidget = this.widgets.find((w) => w.name === "video");
         const pathWidget = this.widgets.find((w) => w.name === "default_value");
         chainCallback(pathWidget, "callback", (value) => {
           if (!value) {
@@ -174,59 +198,180 @@ app.registerExtension({
 
     if (nodeData.name.indexOf('ShellAgentPlugin') === -1) {
       addMenuHandler(nodeType, function (_, options) {
+
         if (this.widgets) {
           let toInput = [];
-
           for (const w of this.widgets) {
             if (["customtext"].indexOf(w.type) > -1) {
               toInput.push({
-                content: `${w.name} <- Input Text`,
-                callback: () => {
-                  this.convertWidgetToInput(w);
-                  const node = addNode("ShellAgentPluginInputText", this, { before: true });
-                  const dvn = node.widgets.find(w => w.name === 'default_value')
-                  dvn.value = w.value;
-                  node.connect(0, this, this.inputs.length - 1);
-                }
+                content: w.name,
+                submenu: {
+                  options: [
+                    {
+                      content: 'Input Text',
+                      callback: () => {
+                        this.convertWidgetToInput(w);
+                        const node = addNode("ShellAgentPluginInputText", this, { before: true });
+                        const dvn = node.widgets.find(w => w.name === 'default_value')
+                        dvn.value = w.value;
+                        node.connect(0, this, this.inputs.length - 1);
+                      }
+                    }
+                  ]
+                },
               })
             }
             if (["number"].indexOf(w.type) > -1) {
               toInput.push({
-                content: `${w.name} <- Input Interger`,
-                callback: () => {
-                  this.convertWidgetToInput(w);
-                  const node = addNode("ShellAgentPluginInputInteger", this, { before: true });
-                  const dvn = node.widgets.find(w => w.name === 'default_value')
-                  dvn.value = w.value;
-                  node.connect(0, this, this.inputs.length - 1);
-                }
-              })
-
-              toInput.push({
-                content: `${w.name} <- Input Float`,
-                callback: () => {
-                  this.convertWidgetToInput(w);
-                  const node = addNode("ShellAgentPluginInputFloat", this, { before: true });
-                  const dvn = node.widgets.find(w => w.name === 'default_value')
-                  dvn.value = w.value;
-                  node.connect(0, this, this.inputs.length - 1);
+                content: w.name,
+                submenu: {
+                  options: [
+                    {
+                      content: 'Input Interger',
+                      callback: () => {
+                        this.convertWidgetToInput(w);
+                        const node = addNode("ShellAgentPluginInputInteger", this, { before: true });
+                        const dvn = node.widgets.find(w => w.name === 'default_value')
+                        dvn.value = w.value;
+                        node.connect(0, this, this.inputs.length - 1);
+                      }
+                    },
+                    {
+                      content: 'Input Float',
+                      callback: () => {
+                        this.convertWidgetToInput(w);
+                        const node = addNode("ShellAgentPluginInputFloat", this, { before: true });
+                        const dvn = node.widgets.find(w => w.name === 'default_value')
+                        dvn.value = w.value;
+                        node.connect(0, this, this.inputs.length - 1);
+                      }
+                    }
+                  ]
                 }
               })
             }
           }
-
           if (toInput.length) {
             options.unshift({
-              content: "Convert to ShellAgent",
+              content: "Convert to ShellAgent (Input)",
               submenu: {
                 options: toInput
               }
             })
           }
         }
+
+        if (this.outputs) {
+          let toOutput = [];
+          for (const o of this.outputs) {
+            if (o.type === 'IMAGE') {
+              toOutput.push({
+                content: o.name,
+                submenu: {
+                  options: [
+                    {
+                      content: 'Save Image',
+                      callback: () => {
+                        const node = addNode("ShellAgentPluginSaveImage", this);
+                        this.connect(0, node, 0);
+                      }
+                    },
+                    {
+                      content: 'Save Images',
+                      callback: () => {
+                        const node = addNode("ShellAgentPluginSaveImages", this);
+                        this.connect(0, node, 0);
+                      }
+                    }
+                  ]
+                }
+
+              })
+            }
+
+            if (o.type === 'STRING') {
+              toOutput.push({
+                content: o.name,
+                submenu: {
+                  options: [
+                    {
+                      content: `Output Text`,
+                      callback: () => {
+                        const node = addNode("ShellAgentPluginOutputText", this);
+                        this.connect(0, node, 0);
+                      }
+                    },
+                    {
+                      content: `Output Float`,
+                      callback: () => {
+                        const node = addNode("ShellAgentPluginOutputFloat", this);
+                        this.connect(0, node, 0);
+                      }
+                    },
+                    {
+                      content: `Output Integer`,
+                      callback: () => {
+                        const node = addNode("ShellAgentPluginOutputInteger", this);
+                        this.connect(0, node, 0);
+                      }
+                    }
+                  ]
+                }
+              })
+            }
+
+            if (o.type === "VHS_FILENAMES") {
+              toOutput.push({
+                content: o.name,
+                submenu: {
+                  options: [
+                    {
+                      content: `Save Video - VHS`,
+                      callback: () => {
+                        const node = addNode("ShellAgentPluginSaveVideoVHS", this);
+                        this.connect(0, node, 0);
+                      }
+                    }
+                  ]
+                }
+              })
+            }
+          }
+
+          if (toOutput.length) {
+            options.unshift({
+              content: "Connect to ShellAgent (Output)",
+              submenu: {
+                options: toOutput
+              }
+            })
+          }
+
+        }
       })
     }
   },
+
+  afterConfigureGraph(missingNodeTypes, app) {
+    function addIn(type, nodeId) {
+      if (LiteGraph.slot_types_default_in[type].indexOf(nodeId) === -1) {
+        LiteGraph.slot_types_default_in[type].unshift(nodeId)
+      }
+    }
+
+    function addOut(type, nodeId) {
+      if (LiteGraph.slot_types_default_out[type].indexOf(nodeId) === -1) {
+        LiteGraph.slot_types_default_out[type].unshift(nodeId)
+      }
+    }
+
+    addIn('IMAGE', 'ShellAgentPluginInputImage')
+    addOut('IMAGE', 'ShellAgentPluginSaveImage')
+    addOut('IMAGE', 'ShellAgentPluginSaveImages')
+    addOut('STRING', 'ShellAgentPluginOutputInteger')
+    addOut('STRING', 'ShellAgentPluginOutputFloat')
+    addOut('STRING', 'ShellAgentPluginOutputText')
+  }
 });
 
 function addMenuHandler(nodeType, cb) {
