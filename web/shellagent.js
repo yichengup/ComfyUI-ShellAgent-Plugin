@@ -147,6 +147,10 @@ app.registerExtension({
           content: "Replace with ShellAgent Input Image",
           callback: () => {
             const node = addNode("ShellAgentPluginInputImage", this, { before: true });
+
+            const dvn = node.widgets.find(w => w.name === 'default_value')
+            dvn.value = this.widgets.find(w => w.name === 'image')?.value
+
             app.graph.links.filter(l => l != null)
               .forEach(l => {
                 const tn = app.graph._nodes_by_id[l.target_id]
