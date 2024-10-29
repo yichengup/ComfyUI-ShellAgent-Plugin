@@ -54,7 +54,7 @@ def handle_model_info(ckpt_path, filename, rel_save_path):
         urls = []
         
     item = {
-        "filename": filename,
+        "filename": windows_to_linux_path(filename),
         "save_path": windows_to_linux_path(rel_save_path),
         "urls": urls,
     }
