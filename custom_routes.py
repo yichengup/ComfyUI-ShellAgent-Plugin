@@ -177,6 +177,7 @@ async def shellagent_export(request):
         status = 400
         return_dict = {
             "success": False,
-            "message": str(traceback.format_exc()),
+            "message_detail": str(traceback.format_exc()),
+            "message": str(e),
         }
     return web.json_response(return_dict, status=status)
