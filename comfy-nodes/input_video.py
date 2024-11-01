@@ -124,6 +124,8 @@ class ShellAgentPluginInputVideo:
     @classmethod
     def VALIDATE_INPUTS(s, input_name, default_value, description=""):
         video = default_value
+        if video.startswith("http"):
+            return True
         if not folder_paths.exists_annotated_filepath(video):
             return "Invalid video file: {}".format(video)
         return True
