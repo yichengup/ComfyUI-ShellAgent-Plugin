@@ -2,7 +2,8 @@
 json_type_mapipng = {
     "text": "string",
     "float": "number",
-    "integer": "integer"
+    "integer": "integer",
+    "boolean": "boolean",
 }
 
 class ShellAgentOutputText:
@@ -43,7 +44,7 @@ class ShellAgentOutputFloat(ShellAgentOutputText):
     def INPUT_TYPES(s):
         return {
             "required": {
-                s.TYPE_STR: ("STRING", {"tooltip": f"The {s.TYPE_STR} to output."}),
+                s.TYPE_STR: ("FLOAT", {"tooltip": f"The {s.TYPE_STR} to output."}),
                 "output_name": ("STRING", {"multiline": False, "default": f"output_{s.TYPE_STR}"},),
             },
         }
@@ -56,7 +57,19 @@ class ShellAgentOutputInteger(ShellAgentOutputText):
     def INPUT_TYPES(s):
         return {
             "required": {
-                s.TYPE_STR: ("STRING", {"tooltip": f"The {s.TYPE_STR} to output."}),
+                s.TYPE_STR: ("INT", {"tooltip": f"The {s.TYPE_STR} to output."}),
+                "output_name": ("STRING", {"multiline": False, "default": f"output_{s.TYPE_STR}"},),
+            },
+        }
+    
+class ShellAgentOutputBoolean(ShellAgentOutputText):
+    TYPE_STR = "boolean"
+    DESCRIPTION = "output the integer"
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": {
+                s.TYPE_STR: ("BOOLEAN", {"tooltip": f"The {s.TYPE_STR} to output."}),
                 "output_name": ("STRING", {"multiline": False, "default": f"output_{s.TYPE_STR}"},),
             },
         }
@@ -65,7 +78,8 @@ class ShellAgentOutputInteger(ShellAgentOutputText):
 NODE_CLASS_MAPPINGS = {
     "ShellAgentPluginOutputText": ShellAgentOutputText,
     "ShellAgentPluginOutputFloat": ShellAgentOutputFloat,
-    "ShellAgentPluginOutputInteger": ShellAgentOutputInteger
+    "ShellAgentPluginOutputInteger": ShellAgentOutputInteger,
+    "ShellAgentPluginOutputBoolean": ShellAgentOutputBoolean,
 }
 NODE_DISPLAY_NAME_MAPPINGS = {
     "ShellAgentPluginOutputText": "Output Text (ShellAgent Plugin)",

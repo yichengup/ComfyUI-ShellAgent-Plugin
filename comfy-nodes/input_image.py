@@ -45,7 +45,7 @@ class ShellAgentPluginInputImage:
             "title": kwargs["input_name"],
             "type": "string",
             "default": kwargs["default_value"],
-            "description": kwargs["description"],
+            "description": kwargs.get("description", ""),
             "url_type": "image"
         }
         return schema

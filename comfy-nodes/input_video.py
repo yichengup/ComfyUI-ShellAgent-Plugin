@@ -120,6 +120,13 @@ class ShellAgentPluginInputVideo:
             "url_type": "video"
         }
         return schema
+    
+    @classmethod
+    def VALIDATE_INPUTS(s, input_name, default_value, description=""):
+        video = default_value
+        if not folder_paths.exists_annotated_filepath(video):
+            return "Invalid video file: {}".format(video)
+        return True
 
     def run(self, input_name, default_value=None, description=None):
         input_dir = folder_paths.get_input_directory()
