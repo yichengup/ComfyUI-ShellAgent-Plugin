@@ -151,7 +151,7 @@ class ShellAgentPluginInputVideo:
             num_bars = int(file_size / chunk_size)
 
             with open(video_path, "wb") as out_file:
-                for chunk in tqdm(
+                for chunk in tqdm.tqdm(
                     response.iter_content(chunk_size=chunk_size),
                     total=num_bars,
                     unit="KB",
