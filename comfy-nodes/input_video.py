@@ -4,7 +4,7 @@ import numpy as np
 import torch
 import os
 import uuid
-import tqdm
+from tqdm import tqdm
 
 
 # class ShellAgentPluginInputImage:
