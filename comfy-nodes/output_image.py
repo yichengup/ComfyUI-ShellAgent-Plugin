@@ -82,7 +82,7 @@ class ShellAgentSaveVideoVHS:
         video_path = output_files[-1]
         cwd = os.getcwd()
         # preview_image = os.path.relpath(preview_image)
-        video_path = os.path.relpath(video_path)
+        video_path = os.path.relpath(video_path, folder_paths.base_path)
         results = {"ui": {"video": [video_path]}}
         return results
     
