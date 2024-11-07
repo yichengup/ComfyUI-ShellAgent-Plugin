@@ -21,7 +21,7 @@ model_loaders_info = json.load(open(os.path.join(os.path.dirname(__file__), "mod
 node_deps_info = json.load(open(os.path.join(os.path.dirname(__file__), "node_deps_info.json")))
 node_blacklist = json.load(open(os.path.join(os.path.dirname(__file__), "node_blacklist.json")))
 
-model_suffix = [".ckpt", ".safetensors", ".bin", ".pth", ".pt", ".onnx", ".gguf"]
+model_suffix = [".ckpt", ".safetensors", ".bin", ".pth", ".pt", ".onnx", ".gguf", ".sft"]
 extra_packages = ["transformers", "timm", "diffusers", "accelerate"]
 
 
