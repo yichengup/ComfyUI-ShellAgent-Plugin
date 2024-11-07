@@ -5,7 +5,7 @@ import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import folder_paths
 
-from .utils import compute_sha256
+from .utils.utils import compute_sha256
 
 ext_to_type = {
     # image

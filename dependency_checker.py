@@ -11,7 +11,8 @@ from folder_paths import base_path as BASE_PATH
 from folder_paths import get_full_path
 
 
-from .utils import compute_sha256, windows_to_linux_path
+from .utils.utils import compute_sha256, windows_to_linux_path
+from .utils.pytree import tree_map
 from .file_upload import collect_local_file, process_local_file_path_async
 
 
@@ -148,6 +149,36 @@ def resolve_dependencies(prompt, custom_dependencies): # resolve custom nodes an
     ckpt_paths = {}
     
     file_mapping_dict = {}
+    
+    
+    def collect_unknown_models(filename):
+        if type(filename) != str:
+            return
+        is_model = False
+        for possible_suffix in model_suffix:
+            if filename.endswith(possible_suffix):
+                is_model = True
+        if is_model:
+            print(f"find {filename}, is_model=True")
+            # find possible paths
+            matching_files = []
+            # Walk through all subdirectories and files in the directory
+            rel_save_path = None
+            for possible_folder_name in folder_paths.folder_names_and_paths:
+                full_path = folder_paths.get_full_path(possible_folder_name, filename)
+                if full_path is None:
+                    continue
+                rel_save_path = os.path.relpath(folder_paths.folder_names_and_paths[possible_folder_name][0][0], folder_paths.models_dir)
+                matching_files.append(full_path)
+                break
+            print(f"matched files: {matching_files}")
+            if len(set(matching_files)) == 1:
+                assert rel_save_path is not None
+                ckpt_paths[matching_files[0]] = {
+                    "filename": filename,
+                    "rel_save_path": rel_save_path
+                }
+    
     for node_id, node_info in prompt.items():
         node_class_type = node_info.get("class_type")
         if node_class_type is None:
@@ -174,33 +205,8 @@ def resolve_dependencies(prompt, custom_dependencies): # resolve custom nodes an
                             "rel_save_path": rel_save_path
                         }
         else:
-            for field_name, filename in node_info["inputs"].items():
-                if type(filename) != str:
-                    continue
-                is_model = False
-                for possible_suffix in model_suffix:
-                    if filename.endswith(possible_suffix):
-                        is_model = True
-                if is_model:
-                    print(f"find {filename}, is_model=True")
-                    # find possible paths
-                    matching_files = []
-                    # Walk through all subdirectories and files in the directory
-                    rel_save_path = None
-                    for possible_folder_name in folder_paths.folder_names_and_paths:
-                        full_path = folder_paths.get_full_path(possible_folder_name, filename)
-                        if full_path is None:
-                            continue
-                        rel_save_path = os.path.relpath(folder_paths.folder_names_and_paths[possible_folder_name][0][0], folder_paths.models_dir)
-                        matching_files.append(full_path)
-                        break
-                    print(f"matched files: {matching_files}")
-                    if len(set(matching_files)) == 1:
-                        assert rel_save_path is not None
-                        ckpt_paths[matching_files[0]] = {
-                            "filename": filename,
-                            "rel_save_path": rel_save_path
-                        }
+            tree_map(collect_unknown_models, node_info["inputs"])
+
         list(map(partial(collect_local_file, mapping_dict=file_mapping_dict), node_info["inputs"].values()))
             
     print("ckpt_paths:", ckpt_paths)
