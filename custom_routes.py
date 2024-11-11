@@ -96,7 +96,7 @@ def schema_validator(prompt):
                 schema = node_cls.validate(**node_info["inputs"])
                 # validate schema
                 if not is_valid_variable_name(schema["title"]):
-                    raise ValueError(f'{schema["title"]} is not a valid variable name!')
+                    raise ValueError(f'`{schema["title"]}` is not a valid variable name!')
             else:
                 raise NotImplementedError("the validate is not implemented")
             schemas[mode][node_id] = schema
