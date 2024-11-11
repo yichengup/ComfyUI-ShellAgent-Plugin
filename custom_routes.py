@@ -29,6 +29,8 @@ import atexit
 from datetime import datetime
 import nodes
 import traceback
+import re
+import keyword
 
 from .dependency_checker import resolve_dependencies
 
@@ -45,6 +47,14 @@ CustomNodeTypeMap = {
     "ShellAgentPluginSaveVideoVHS": "video",
 }
 
+# Regular expression for a valid Python variable name
+variable_name_pattern = r'^[a-zA-Z_][a-zA-Z0-9_]*$'
+
+def is_valid_variable_name(name):
+    # Check if it matches the pattern and is not a keyword
+    if re.match(variable_name_pattern, name) and not keyword.iskeyword(name):
+        return True
+    return False
 
 def schema_validator(prompt):
     from nodes import NODE_CLASS_MAPPINGS, NODE_DISPLAY_NAME_MAPPINGS
@@ -84,6 +94,9 @@ def schema_validator(prompt):
                 continue
             if hasattr(node_cls, "validate"):
                 schema = node_cls.validate(**node_info["inputs"])
+                # validate schema
+                if not is_valid_variable_name(schema["title"]):
+                    raise ValueError(f'{schema["title"]} is not a valid variable name!')
             else:
                 raise NotImplementedError("the validate is not implemented")
             schemas[mode][node_id] = schema
