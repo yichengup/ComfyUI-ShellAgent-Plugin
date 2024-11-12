@@ -20,6 +20,7 @@ model_list_json = json.load(open(os.path.join(os.path.dirname(__file__), "model_
 model_loaders_info = json.load(open(os.path.join(os.path.dirname(__file__), "model_loader_info.json")))
 node_deps_info = json.load(open(os.path.join(os.path.dirname(__file__), "node_deps_info.json")))
 node_blacklist = json.load(open(os.path.join(os.path.dirname(__file__), "node_blacklist.json")))
+node_remote_skip_models = json.load(open(os.path.join(os.path.dirname(__file__), "node_remote.json")))
 
 model_suffix = [".ckpt", ".safetensors", ".bin", ".pth", ".pt", ".onnx", ".gguf", ".sft"]
 extra_packages = ["transformers", "timm", "diffusers", "accelerate"]
@@ -184,9 +185,17 @@ def resolve_dependencies(prompt, custom_dependencies): # resolve custom nodes an
         if node_class_type is None:
             raise NotImplementedError(f"Missing nodes founded, please first install the missing nodes using ComfyUI Manager")
         node_cls = NODE_CLASS_MAPPINGS[node_class_type]
+        
+        skip_model_check = False
+        
         if hasattr(node_cls, "RELATIVE_PYTHON_MODULE") and node_cls.RELATIVE_PYTHON_MODULE.startswith("custom_nodes."):
             print(node_cls.RELATIVE_PYTHON_MODULE)
             custom_nodes.append(node_cls.RELATIVE_PYTHON_MODULE)
+            
+            if node_cls.RELATIVE_PYTHON_MODULE[len("custom_nodes."):] in node_remote_skip_models:
+                skip_model_check = True
+                print(f"skip model check for {node_class_type}")
+                
         if node_class_type in model_loaders_info:
             for field_name, filename in node_info["inputs"].items():
                 if type(filename) != str:
@@ -204,7 +213,7 @@ def resolve_dependencies(prompt, custom_dependencies): # resolve custom nodes an
                             "filename": filename,
                             "rel_save_path": rel_save_path
                         }
-        else:
+        elif not skip_model_check:
             tree_map(collect_unknown_models, node_info["inputs"])
 
         list(map(partial(collect_local_file, mapping_dict=file_mapping_dict), node_info["inputs"].values()))
