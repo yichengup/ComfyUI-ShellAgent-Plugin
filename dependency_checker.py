@@ -293,7 +293,10 @@ def resolve_dependencies(prompt, custom_dependencies): # resolve custom nodes an
 
     # step 3: handle local files
     process_local_file_path_async(file_mapping_dict, max_workers=20)
-    files_dict = {v[0]: {"filename": windows_to_linux_path(os.path.relpath(v[2], BASE_PATH)), "urls": [v[1]]} for v in file_mapping_dict.values()}
+    files_dict = {
+        v[0]: {
+            "filename": windows_to_linux_path(os.path.relpath(v[2], BASE_PATH)) if not v[3] else v[2], 
+            "urls": [v[1]]} for v in file_mapping_dict.values()}
     
     depencencies = {
         "comfyui_version": comfyui_version,
