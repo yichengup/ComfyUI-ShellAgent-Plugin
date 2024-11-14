@@ -152,7 +152,7 @@ def resolve_dependencies(prompt, custom_dependencies): # resolve custom nodes an
     file_mapping_dict = {}
     
     
-    def collect_unknown_models(filename):
+    def collect_unknown_models(filename, node_id, node_info):
         if type(filename) != str:
             return
         is_model = False
@@ -162,7 +162,7 @@ def resolve_dependencies(prompt, custom_dependencies): # resolve custom nodes an
         if is_model:
             print(f"find {filename}, is_model=True")
             # find possible paths
-            matching_files = []
+            matching_files = {}
             # Walk through all subdirectories and files in the directory
             rel_save_path = None
             for possible_folder_name in folder_paths.folder_names_and_paths:
@@ -170,15 +170,37 @@ def resolve_dependencies(prompt, custom_dependencies): # resolve custom nodes an
                 if full_path is None:
                     continue
                 rel_save_path = os.path.relpath(folder_paths.folder_names_and_paths[possible_folder_name][0][0], folder_paths.models_dir)
-                matching_files.append(full_path)
-                break
-            print(f"matched files: {matching_files}")
-            if len(set(matching_files)) == 1:
-                assert rel_save_path is not None
-                ckpt_paths[matching_files[0]] = {
-                    "filename": filename,
+                matching_files[full_path] = {
                     "rel_save_path": rel_save_path
                 }
+
+            print(f"matched files: {matching_files}")
+            
+            # step 2: search for all the files under "models"
+            
+            for full_path in glob.glob(f"{folder_paths.models_dir}/**/*", recursive=True):
+                if os.path.isfile(full_path) and full_path.endswith(filename) and full_path not in matching_files:
+                    folder_path = full_path[:-len(filename)]
+                    rel_save_path = os.path.relpath(folder_path, folder_paths.models_dir)
+                    matching_files[full_path] = {
+                        "rel_save_path": rel_save_path
+                    }
+                    
+            print(f"matched files: {matching_files}")
+            
+            if len(matching_files) == 0:
+                raise ValueError(f"Cannot find model: `{filename}`, Node ID: `{node_id}`, Node Info: `{node_info}`")
+            
+            elif len(matching_files) <= 3:
+                for full_path, info in matching_files.items():
+                    ckpt_paths[full_path] = {
+                        "filename": filename,
+                        "rel_save_path": info["rel_save_path"]
+                    }
+                    return
+            else:
+                raise ValueError(f"Multiple models of `{filename}` founded, Node ID: `{node_id}`, Node Info: `{node_info}`, Possible paths: `{list(matching_files.keys())}`")
+            
     
     for node_id, node_info in prompt.items():
         node_class_type = node_info.get("class_type")
@@ -214,7 +236,7 @@ def resolve_dependencies(prompt, custom_dependencies): # resolve custom nodes an
                             "rel_save_path": rel_save_path
                         }
         elif not skip_model_check:
-            tree_map(collect_unknown_models, node_info["inputs"])
+            tree_map(lambda x: collect_unknown_models(x, node_id, node_info), node_info["inputs"])
 
         list(map(partial(collect_local_file, mapping_dict=file_mapping_dict), node_info["inputs"].values()))
             
