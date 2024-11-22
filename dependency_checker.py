@@ -151,8 +151,8 @@ def resolve_dependencies(prompt, custom_dependencies): # resolve custom nodes an
     
     file_mapping_dict = {}
     
-    
-    def collect_unknown_models(filename, node_id, node_info):
+    SKIP_FOLDER_NAMES = ["configs", "custom_nodes"]
+    def collect_unknown_models(filename, node_id, node_info, custom_node_path):
         if type(filename) != str:
             return
         is_model = False
@@ -166,6 +166,9 @@ def resolve_dependencies(prompt, custom_dependencies): # resolve custom nodes an
             # Walk through all subdirectories and files in the directory
             rel_save_path = None
             for possible_folder_name in folder_paths.folder_names_and_paths:
+                if possible_folder_name in SKIP_FOLDER_NAMES:
+                    print(f"skip {possible_folder_name}")
+                    continue
                 full_path = folder_paths.get_full_path(possible_folder_name, filename)
                 if full_path is None:
                     continue
@@ -187,6 +190,16 @@ def resolve_dependencies(prompt, custom_dependencies): # resolve custom nodes an
                     }
                     
             print(f"matched files: {matching_files}")
+            
+            # step 3: search inside the custom nodes
+            if custom_node_path is not None:
+                for full_path in glob.glob(f"{custom_node_path}/**/*", recursive=True):
+                    if os.path.isfile(full_path) and full_path.endswith(filename) and full_path not in matching_files:
+                        folder_path = full_path[:-len(filename)]
+                        rel_save_path = os.path.relpath(folder_path, folder_paths.models_dir)
+                        matching_files[full_path] = {
+                            "rel_save_path": rel_save_path
+                        }
             
             if len(matching_files) == 0:
                 raise ValueError(f"Cannot find model: `{filename}`, Node ID: `{node_id}`, Node Info: `{node_info}`")
@@ -210,10 +223,11 @@ def resolve_dependencies(prompt, custom_dependencies): # resolve custom nodes an
         
         skip_model_check = False
         
+        custom_node_path = None
         if hasattr(node_cls, "RELATIVE_PYTHON_MODULE") and node_cls.RELATIVE_PYTHON_MODULE.startswith("custom_nodes."):
             print(node_cls.RELATIVE_PYTHON_MODULE)
             custom_nodes.append(node_cls.RELATIVE_PYTHON_MODULE)
-            
+            custom_node_path = os.path.join(BASE_PATH, node_cls.RELATIVE_PYTHON_MODULE.replace(".", "/"))
             if node_cls.RELATIVE_PYTHON_MODULE[len("custom_nodes."):] in node_remote_skip_models:
                 skip_model_check = True
                 print(f"skip model check for {node_class_type}")
@@ -236,7 +250,7 @@ def resolve_dependencies(prompt, custom_dependencies): # resolve custom nodes an
                             "rel_save_path": rel_save_path
                         }
         elif not skip_model_check:
-            tree_map(lambda x: collect_unknown_models(x, node_id, node_info), node_info["inputs"])
+            tree_map(lambda x: collect_unknown_models(x, node_id, node_info, custom_node_path), node_info["inputs"])
 
         list(map(partial(collect_local_file, mapping_dict=file_mapping_dict), node_info["inputs"].values()))
             
