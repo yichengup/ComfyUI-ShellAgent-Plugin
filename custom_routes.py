@@ -32,8 +32,8 @@ import traceback
 import re
 import keyword
 
-from .dependency_checker import resolve_dependencies
-
+from .dependency_checker import resolve_dependencies, inspect_repo_version
+from folder_paths import base_path as BASE_PATH
 
 WORKFLOW_ROOT = "shellagent/comfy_workflow"
 
@@ -194,3 +194,15 @@ async def shellagent_export(request):
             "message": str(e),
         }
     return web.json_response(return_dict, status=status)
+
+
+@server.PromptServer.instance.routes.post("/shellagent/inspect_version") # data same as queue prompt, plus workflow_name
+async def shellagent_export(request):
+    data = await request.json()
+    comfyui_version = inspect_repo_version(BASE_PATH)
+    comfyui_shellagent_plugin_version = inspect_repo_version(os.path.dirname(__file__))
+    return_dict = {
+        "comfyui_version": comfyui_version,
+        "comfyui_shellagent_plugin_version": comfyui_shellagent_plugin_version,
+    }
+    return web.json_response(return_dict, status=200)
