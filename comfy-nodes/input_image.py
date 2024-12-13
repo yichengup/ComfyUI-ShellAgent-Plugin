@@ -59,10 +59,10 @@ class ShellAgentPluginInputImage:
         if image.startswith("http"):
             return True
         
-        if not os.path.isfile(image):
+        if image == "":
             return "Invalid image file: please check if the image is empty or invalid"
         
-        if folder_paths.exists_annotated_filepath(image):
+        if not folder_paths.exists_annotated_filepath(image):
             return "Invalid image file: {}".format(image)
 
         return True
@@ -107,6 +107,7 @@ class ShellAgentPluginInputImage:
 
         return (output_image, output_mask)
 
+
     def run(self, input_name, default_value=None, display_name=None, description=None):
         input_dir = folder_paths.get_input_directory()
         image_path = default_value
@@ -128,7 +129,7 @@ class ShellAgentPluginInputImage:
                 if not os.path.isfile(image_path): # abs path
                     # local path
                     image_path = os.path.join(input_dir, image_path)
-                image = Image.open(image_path).convert("RGB")
+                image = node_helpers.pillow(Image.open, image_path)
 
             return self.convert_image_mask(image)
             # image = ImageOps.exif_transpose(image)
