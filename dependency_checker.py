@@ -283,7 +283,10 @@ def resolve_dependencies(prompt, custom_dependencies): # resolve custom nodes an
             print(f"failed to resolve repo info of {custom_node}")
         requirement_file = os.path.join(BASE_PATH, custom_node.replace(".", "/"), "requirements.txt")
         if os.path.isfile(requirement_file):
-            requirements_lines += open(requirement_file).readlines()
+            try:
+                requirements_lines += open(requirement_file).readlines()
+            except:
+                pass
     requirements_lines = list(set(requirements_lines))
     requirements_packages = [package_name for package_name, version_specifier in map(split_package_version, requirements_lines) if package_name is not None]
     package_names = set(requirements_packages + extra_packages)

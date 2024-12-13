@@ -55,10 +55,14 @@ class ShellAgentPluginInputImage:
     @classmethod
     def VALIDATE_INPUTS(s, input_name, default_value, description=""):
         image = default_value
+        
         if image.startswith("http"):
             return True
         
-        if not folder_paths.exists_annotated_filepath(image):
+        if not os.path.isfile(image):
+            return "Invalid image file: please check if the image is empty or invalid"
+        
+        if folder_paths.exists_annotated_filepath(image):
             return "Invalid image file: {}".format(image)
 
         return True
