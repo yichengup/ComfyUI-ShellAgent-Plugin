@@ -65,6 +65,9 @@ class ShellAgentPluginInputImage:
         if image == "":
             return "Invalid image file: please check if the image is empty or invalid"
         
+        if os.path.isfile(image):
+            return True
+        
         if not folder_paths.exists_annotated_filepath(image):
             return "Invalid image file: {}".format(image)
 
