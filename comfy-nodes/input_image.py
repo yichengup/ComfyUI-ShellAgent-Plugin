@@ -7,10 +7,33 @@ import torch
 import os
 import uuid
 import tqdm
+from io import BytesIO
+import PIL
+import cv2
 from pillow_heif import register_heif_opener
 
 register_heif_opener()
 
+def safe_open_image(image_bytes):
+    try:
+        image_pil = Image.open(BytesIO(image_bytes))
+    except PIL.UnidentifiedImageError as e:
+        print(e)
+        # Convert response content (bytes) to a NumPy array
+        image_array = np.frombuffer(image_bytes, np.uint8)
+        
+        # Decode the image from the NumPy array (OpenCV format: BGR)
+        image_cv = cv2.imdecode(image_array, cv2.IMREAD_COLOR)
+        
+        if image_cv is not None:
+            # Convert the BGR image to RGB
+            image_rgb = cv2.cvtColor(image_cv, cv2.COLOR_BGR2RGB)
+            
+            # Convert the RGB NumPy array to a PIL Image
+            image_pil = Image.fromarray(image_rgb)
+        else:
+            raise ValueError("The image cannot be identified by neither PIL nor OpenCV")
+    return image_pil
 
 class ShellAgentPluginInputImage:
     @classmethod
@@ -123,7 +146,7 @@ class ShellAgentPluginInputImage:
                 from io import BytesIO
                 print("Fetching image from url: ", image_path)
                 response = requests.get(image_path)
-                image = Image.open(BytesIO(response.content))
+                image = safe_open_image(response.content)
             elif image_path.startswith('data:image/png;base64,') or image_path.startswith('data:image/jpeg;base64,') or image_path.startswith('data:image/jpg;base64,'):
                 import base64
                 from io import BytesIO
