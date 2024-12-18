@@ -222,6 +222,6 @@ async def shellagent_check_exist(request):
     data = await request.json()
 
     return_dict = {
-        "exist":  os.path.exists(data["path"])
+        "exist": uuid.getnode() == data["mac_addr"] and os.path.exists(data["path"]) # really exist, instead of same name
     }
     return web.json_response(return_dict, status=200)
