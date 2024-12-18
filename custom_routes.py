@@ -198,7 +198,7 @@ async def shellagent_export(request):
 
 
 @server.PromptServer.instance.routes.post("/shellagent/inspect_version") # data same as queue prompt, plus workflow_name
-async def shellagent_export(request):
+async def shellagent_inspect_version(request):
     data = await request.json()
     comfyui_version = inspect_repo_version(BASE_PATH)
     comfyui_shellagent_plugin_version = inspect_repo_version(os.path.dirname(__file__))
@@ -210,9 +210,18 @@ async def shellagent_export(request):
 
 
 @server.PromptServer.instance.routes.post("/shellagent/get_mac_addr") # data same as queue prompt, plus workflow_name
-async def shellagent_export(request):
+async def shellagent_get_mac_addr(request):
     data = await request.json()
     return_dict = {
         "mac_addr": uuid.getnode()
+    }
+    return web.json_response(return_dict, status=200)
+
+@server.PromptServer.instance.routes.post("/shellagent/check_exist") # check if the file or folder exist
+async def shellagent_check_exist(request):
+    data = await request.json()
+
+    return_dict = {
+        "exist":  os.path.exists(data["path"])
     }
     return web.json_response(return_dict, status=200)
