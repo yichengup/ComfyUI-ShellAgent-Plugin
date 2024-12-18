@@ -31,6 +31,7 @@ import nodes
 import traceback
 import re
 import keyword
+import uuid
 
 from .dependency_checker import resolve_dependencies, inspect_repo_version
 from folder_paths import base_path as BASE_PATH
@@ -204,5 +205,14 @@ async def shellagent_export(request):
     return_dict = {
         "comfyui_version": comfyui_version,
         "comfyui_shellagent_plugin_version": comfyui_shellagent_plugin_version,
+    }
+    return web.json_response(return_dict, status=200)
+
+
+@server.PromptServer.instance.routes.post("/shellagent/get_mac_addr") # data same as queue prompt, plus workflow_name
+async def shellagent_export(request):
+    data = await request.json()
+    return_dict = {
+        "mac_addr": uuid.getnode()
     }
     return web.json_response(return_dict, status=200)
