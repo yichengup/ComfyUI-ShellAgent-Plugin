@@ -22,7 +22,7 @@ node_deps_info = json.load(open(os.path.join(os.path.dirname(__file__), "node_de
 node_blacklist = json.load(open(os.path.join(os.path.dirname(__file__), "node_blacklist.json")))
 node_remote_skip_models = json.load(open(os.path.join(os.path.dirname(__file__), "node_remote.json")))
 
-model_suffix = [".ckpt", ".safetensors", ".bin", ".pth", ".pt", ".onnx", ".gguf", ".sft"]
+model_suffix = [".ckpt", ".safetensors", ".bin", ".pth", ".pt", ".onnx", ".gguf", ".sft", ".ttf"]
 extra_packages = ["transformers", "timm", "diffusers", "accelerate"]
 
 
