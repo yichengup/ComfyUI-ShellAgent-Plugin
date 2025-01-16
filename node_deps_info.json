@@ -14,6 +14,11 @@
             "name": "ComfyUI_smZNodes",
             "repo": "https://github.com/shiimizu/ComfyUI_smZNodes.git",
             "commit": ""
+        },
+        {
+            "name": "ComfyUI_IPAdapter_plus",
+            "repo": "https://github.com/cubiq/ComfyUI_IPAdapter_plus.git",
+            "commit": ""
         }
     ],
     "efficiency-nodes-comfyui": [
