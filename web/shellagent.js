@@ -1,6 +1,9 @@
 import { app } from "../../scripts/app.js";
 import { api } from "../../scripts/api.js";
 
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+
 app.registerExtension({
   name: "Shellagent.extension",
   async setup() {
@@ -168,6 +171,18 @@ app.registerExtension({
       ) {
         nodeData.input.required.upload = [
           "IMAGEUPLOAD",
+          { widget: "default_value" },
+        ];
+      }
+    }
+
+    if (nodeData.name === "ShellAgentPluginInputAudio") {
+      if (
+        nodeData?.input?.required?.default_value?.[1]?.audio_upload === true
+      ) {
+        nodeData.input.required.audioUI = ["AUDIO_UI"];
+        nodeData.input.required.upload = [
+          "SHELLAGENT_AUDIOUPLOAD",
           { widget: "default_value" },
         ];
       }
@@ -354,23 +369,81 @@ app.registerExtension({
 
   afterConfigureGraph(missingNodeTypes, app) {
     function addIn(type, nodeId) {
+      if(LiteGraph.slot_types_default_in[type] == null) {
+        LiteGraph.slot_types_default_in[type] = []
+      }
       if (LiteGraph.slot_types_default_in[type].indexOf(nodeId) === -1) {
         LiteGraph.slot_types_default_in[type].unshift(nodeId)
       }
     }
 
     function addOut(type, nodeId) {
+      if(LiteGraph.slot_types_default_out[type] == null) {
+        LiteGraph.slot_types_default_out[type] = []
+      }
       if (LiteGraph.slot_types_default_out[type].indexOf(nodeId) === -1) {
         LiteGraph.slot_types_default_out[type].unshift(nodeId)
       }
     }
 
     addIn('IMAGE', 'ShellAgentPluginInputImage')
+    addIn('AUDIO', 'ShellAgentPluginInputAudio')
     addOut('IMAGE', 'ShellAgentPluginSaveImage')
     addOut('IMAGE', 'ShellAgentPluginSaveImages')
+    addOut('AUDIO', 'ShellAgentPluginSaveAudios')
+    addOut('AUDIO', 'ShellAgentPluginSaveAudio')
     addOut('STRING', 'ShellAgentPluginOutputInteger')
     addOut('STRING', 'ShellAgentPluginOutputFloat')
     addOut('STRING', 'ShellAgentPluginOutputText')
+  },
+  getCustomWidgets() {
+    return {
+      SHELLAGENT_AUDIOUPLOAD(node, inputName) {
+        const audioWidget = node.widgets.find(
+          (w) => w.name === "default_value"
+        );
+        const audioUIWidget = node.widgets.find(
+          (w) => w.name === "audioUI"
+        );
+        const onAudioWidgetUpdate = /* @__PURE__ */ __name(() => {
+          audioUIWidget.element.src = api.apiURL(
+            getResourceURL(...splitFilePath(audioWidget.value))
+          );
+        }, "onAudioWidgetUpdate");
+        if (audioWidget.value) {
+          onAudioWidgetUpdate();
+        }
+        audioWidget.callback = onAudioWidgetUpdate;
+        const onGraphConfigured = node.onGraphConfigured;
+        node.onGraphConfigured = function() {
+          onGraphConfigured?.apply(this, arguments);
+          if (audioWidget.value) {
+            onAudioWidgetUpdate();
+          }
+        };
+        const fileInput = document.createElement("input");
+        fileInput.type = "file";
+        fileInput.accept = "audio/*";
+        fileInput.style.display = "none";
+        fileInput.onchange = () => {
+          if (fileInput.files.length) {
+            uploadFileAudio(audioWidget, audioUIWidget, fileInput.files[0], true);
+          }
+        };
+        const uploadWidget = node.addWidget(
+          "button",
+          inputName,
+          /* value=*/
+          "",
+          () => {
+            fileInput.click();
+          },
+          { serialize: false }
+        );
+        uploadWidget.label = "choose file to upload";
+        return { widget: uploadWidget };
+      }
+    };
   }
 });
 
@@ -744,4 +817,55 @@ function addLoadVideoCommon(nodeType, nodeData) {
       }
     });
   });
+}
+
+function getResourceURL(subfolder, filename, type = "input") {
+  const params = [
+    "filename=" + encodeURIComponent(filename),
+    "type=" + type,
+    "subfolder=" + subfolder,
+    app.getRandParam().substring(1)
+  ].join("&");
+  return `/view?${params}`;
+}
+
+function splitFilePath(path) {
+  const folder_separator = path.lastIndexOf("/");
+  if (folder_separator === -1) {
+    return ["", path];
+  }
+  return [
+    path.substring(0, folder_separator),
+    path.substring(folder_separator + 1)
+  ];
+}
+
+async function uploadFileAudio(audioWidget, audioUIWidget, file2, updateNode, pasted = false) {
+  try {
+    const body = new FormData();
+    body.append("image", file2);
+    if (pasted) body.append("subfolder", "pasted");
+    const resp = await api.fetchApi("/upload/image", {
+      method: "POST",
+      body
+    });
+    if (resp.status === 200) {
+      const data = await resp.json();
+      let path = data.name;
+      if (data.subfolder) path = data.subfolder + "/" + path;
+      if (!audioWidget.options.values.includes(path)) {
+        audioWidget.options.values.push(path);
+      }
+      if (updateNode) {
+        audioUIWidget.element.src = api.apiURL(
+          getResourceURL(...splitFilePath(path))
+        );
+        audioWidget.value = path;
+      }
+    } else {
+      window.alert(resp.status + " - " + resp.statusText);
+    }
+  } catch (error) {
+    window.alert(error);
+  }
 }
