@@ -47,9 +47,11 @@ class ShellAgentPluginInputImage:
                     "STRING",
                     {"multiline": False, "default": "input_image", "forceInput": False},
                 ),
-                "default_value": (
-                    # "STRING", {"image_upload": True, "default": files[0] if len(files) else ""},
+                "image": (
                     sorted(files), {"image_upload": True, "forceInput": False}
+                ),
+                "default_value": (
+                    "STRING", {"forceInput": False}
                 ),
             },
             "optional": {
@@ -79,20 +81,21 @@ class ShellAgentPluginInputImage:
         return schema
     
     @classmethod
-    def VALIDATE_INPUTS(s, input_name, default_value, description=""):
-        image = default_value
+    def VALIDATE_INPUTS(s, input_name, default_value, image=None, description=""):
+        # check default_value first
+        image_to_check = default_value if default_value else image
         
-        if image.startswith("http"):
+        if image_to_check.startswith("http"):
             return True
         
-        if image == "":
+        if image_to_check == "":
             return "Invalid image file: please check if the image is empty or invalid"
         
-        if os.path.isfile(image):
+        if os.path.isfile(image_to_check):
             return True
         
-        if not folder_paths.exists_annotated_filepath(image):
-            return "Invalid image file: {}".format(image)
+        if not folder_paths.exists_annotated_filepath(image_to_check):
+            return "Invalid image file: {}".format(image_to_check)
 
         return True
     
@@ -137,9 +140,10 @@ class ShellAgentPluginInputImage:
         return (output_image, output_mask)
 
 
-    def run(self, input_name, default_value=None, display_name=None, description=None):
+    def run(self, input_name, default_value=None, image=None, display_name=None, description=None):
+        # use default_value if it exists, otherwise use image
+        image_path = default_value if default_value else image
         input_dir = folder_paths.get_input_directory()
-        image_path = default_value
         try:
             if image_path.startswith('http'):
                 import requests
