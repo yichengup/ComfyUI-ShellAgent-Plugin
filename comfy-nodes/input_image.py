@@ -78,21 +78,20 @@ class ShellAgentPluginInputImage:
         return schema
     
     @classmethod
-    def VALIDATE_INPUTS(s, input_name, default_value, image=None, description=""):
-        # check default_value first
-        image_to_check = default_value if default_value else image
+    def VALIDATE_INPUTS(s, input_name, default_value, description=""):
+        image = default_value
         
-        if image_to_check.startswith("http"):
+        if image.startswith("http"):
             return True
         
-        if image_to_check == "":
+        if image == "":
             return "Invalid image file: please check if the image is empty or invalid"
         
-        if os.path.isfile(image_to_check):
+        if os.path.isfile(image):
             return True
         
-        if not folder_paths.exists_annotated_filepath(image_to_check):
-            return "Invalid image file: {}".format(image_to_check)
+        if not folder_paths.exists_annotated_filepath(image):
+            return "Invalid image file: {}".format(image)
 
         return True
     
@@ -137,9 +136,8 @@ class ShellAgentPluginInputImage:
         return (output_image, output_mask)
 
 
-    def run(self, input_name, default_value=None, image=None, display_name=None, description=None):
-        # use default_value if it exists, otherwise use image
-        image_path = default_value if default_value else image
+    def run(self, input_name, default_value=None, display_name=None, description=None):
+        image_path = default_value
         input_dir = folder_paths.get_input_directory()
         try:
             if image_path.startswith('http'):
