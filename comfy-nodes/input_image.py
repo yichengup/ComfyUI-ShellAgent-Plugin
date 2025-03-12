@@ -57,7 +57,7 @@ class ShellAgentPluginInputImage:
             "optional": {
                 "description": (
                     "STRING",
-                    {"multiline": True, "default": "", "forceInput": False},
+                    {"multiline": False, "default": "", "forceInput": False},
                 ),
             }
         }

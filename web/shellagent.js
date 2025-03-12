@@ -171,7 +171,7 @@ app.registerExtension({
       ) {
         nodeData.input.required.upload = [
           "IMAGEUPLOAD",
-          { widget: "default_value" },
+          { widget: "default_value", imageInputName: "default_value", image_upload: true },
         ];
       }
     }
