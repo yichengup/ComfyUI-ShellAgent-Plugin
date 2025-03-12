@@ -47,11 +47,8 @@ class ShellAgentPluginInputImage:
                     "STRING",
                     {"multiline": False, "default": "input_image", "forceInput": False},
                 ),
-                "image": (
-                    sorted(files), {"image_upload": True, "forceInput": False}
-                ),
                 "default_value": (
-                    "STRING", {"forceInput": False}
+                    sorted(files), {"image_upload": True, "forceInput": False}
                 ),
             },
             "optional": {
