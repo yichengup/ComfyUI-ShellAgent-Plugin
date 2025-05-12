@@ -102,6 +102,11 @@ def inspect_repo_version(module_path):
 
 def fetch_model_searcher_results(model_ids):
     import requests
+    import urllib3
+    
+    # 可选：禁用警告（仅在调试时使用）
+    # urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+    
     url = "https://models-searcher.myshell.life/search_urls"
     headers = {
         "Content-Type": "application/json"
@@ -110,11 +115,25 @@ def fetch_model_searcher_results(model_ids):
         "sha256": model_ids
     }
 
-    response = requests.post(url, headers=headers, json=data)
-    if response.status_code == 200:
-        results = [item[:10] for item in response.json()]
-    else:
+    try:
+        # 尝试正常连接
+        response = requests.post(url, headers=headers, json=data, timeout=10)
+        if response.status_code == 200:
+            results = [item[:10] for item in response.json()]
+        else:
+            results = None
+    except requests.exceptions.SSLError as e:
+        print(f"SSL错误: {e}")
+        # 可选：尝试不验证SSL（不推荐用于生产环境）
+        # response = requests.post(url, headers=headers, json=data, verify=False)
+        # if response.status_code == 200:
+        #     results = [item[:10] for item in response.json()]
+        # else:
         results = None
+    except Exception as e:
+        print(f"连接错误: {e}")
+        results = None
+        
     return results
 
 def split_package_version(require_line):
